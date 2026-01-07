@@ -29,6 +29,12 @@
     }
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--text)}
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    @media (min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+    .kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .kpi .t{color:var(--muted);font-size:12px}
+    .kpi .v{margin-top:6px;font-weight:800;font-size:16px}
+    .pos{color:var(--pos)} .neg{color:var(--neg)}
     details{border-radius:14px;border:1px solid var(--line);background:rgba(18,26,42,.6);max-width:1100px;margin:0 auto 10px}
     summary{cursor:pointer;padding:12px 14px;list-style:none}
     summary::-webkit-details-marker{display:none}
@@ -36,7 +42,6 @@
     .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
     .tiny{font-size:12px;color:var(--muted)}
     .hr{height:1px;background:var(--line);margin:12px 0}
-    .pos{color:var(--pos)} .neg{color:var(--neg)}
   </style>
 </head>
 
@@ -44,7 +49,8 @@
   <div class="card">
     <h1>Tunjay Holding</h1>
     <div class="sub">
-      Version: <b>PERSIST+EDIT</b> · Daten bleiben nach Reload erhalten (localStorage).
+      Version: <b>PERSIST + MIGRATION + EDIT + TOTALS</b><br/>
+      Cashflow = Warmmiete − Nebenkosten (ihr zahlt) − Rate
       <div class="tiny" id="loadedInfo"></div>
     </div>
 
@@ -63,7 +69,7 @@
 
   <div class="card">
     <div class="row">
-      <h2 style="margin:0">Objekt anlegen / bearbeiten</h2>
+      <h2 style="margin:0">Objekt anlegen / bearbeiten (Kopfkarte)</h2>
       <div class="right">
         <span class="pill" id="editPill" style="display:none">Bearbeiten aktiv</span>
       </div>
@@ -72,33 +78,33 @@
     <div class="grid" style="margin-top:10px">
       <div class="f sm6">
         <label>Objektname</label>
-        <input id="p_name">
+        <input id="p_name" placeholder="z. B. MFH Lindenstraße 12">
       </div>
       <div class="f sm3">
         <label>Einheiten</label>
-        <input id="p_units" type="number" min="1" step="1">
+        <input id="p_units" type="number" min="1" step="1" placeholder="z. B. 6">
       </div>
       <div class="f sm3">
         <label>Start Darlehen (YYYY-MM)</label>
-        <input id="l_start" placeholder="2024-01">
+        <input id="l_start" placeholder="z. B. 2024-01">
       </div>
 
       <div class="f sm4">
         <label>Startschuld (€)</label>
-        <input id="l_principal" type="number" step="0.01">
+        <input id="l_principal" type="number" step="0.01" placeholder="z. B. 320000">
       </div>
       <div class="f sm4">
         <label>Zins p.a. (%)</label>
-        <input id="l_interest" type="number" step="0.0001">
+        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 3.25">
       </div>
       <div class="f sm4">
-        <label>Rate / Monat (€)</label>
-        <input id="l_payment" type="number" step="0.01">
+        <label>Annuität / Rate pro Monat (€)</label>
+        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 1450">
       </div>
 
       <div class="f sm6">
-        <label>Nebenkosten (ihr zahlt) / Monat (€)</label>
-        <input id="cf_util" type="number" step="0.01">
+        <label>Nebenkosten (ihr zahlt) pro Monat (€)</label>
+        <input id="cf_util" type="number" step="0.01" placeholder="z. B. 600">
       </div>
 
       <div class="f sm6">
@@ -106,7 +112,7 @@
         <div id="unitRents"></div>
         <div class="row" style="margin-top:8px">
           <button class="btn" id="buildUnits">Felder erstellen / aktualisieren</button>
-          <span class="tiny">Pro Einheit eine Warmmiete.</span>
+          <span class="tiny">Pro Einheit ein Warmmiet-Feld.</span>
         </div>
       </div>
 
@@ -121,15 +127,41 @@
     </div>
   </div>
 
+  <div class="card">
+    <h2>Gesamtbilanz (ausgewähltes Jahr)</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Zinsen (Jahr)</div><div class="v" id="tot_interest">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Tilgung (Jahr)</div><div class="v" id="tot_principal">–</div></div>
+      <div class="kpi"><div class="t">Gesamt eff. Tilgung (Jahr)</div><div class="v" id="tot_efftilg">–</div></div>
+    </div>
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi"><div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="tot_cf_year">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Cashflow (Monat Ø)</div><div class="v" id="tot_cf_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Warmmiete (Monat)</div><div class="v" id="tot_warm_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Rate (Monat)</div><div class="v" id="tot_rate_month">–</div></div>
+    </div>
+  </div>
+
   <div id="list"></div>
 
 <script>
 (() => {
-  // FIXER KEY: nie mehr ändern, sonst wirken Daten "weg"
+  // Fester Key (Daten bleiben nach Reload)
   const STORAGE_KEY = "tunjay_holding_properties";
+
+  // alte Keys (Migration, falls du vorherige Versionen hattest)
+  const LEGACY_KEYS = [
+    "tunjay_cf_units_v2_edit",
+    "tunjay_objects_edit_v1",
+    "tunjay_cf_units_v2",
+    "tunjay_cf_units",
+    "tunjay_cf"
+  ];
 
   const el = (id) => document.getElementById(id);
   const fmtEur = (n) => new Intl.NumberFormat("de-DE", {style:"currency", currency:"EUR"}).format(isFinite(n)?n:0);
+  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
   function parseYearMonth(s){
     const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
@@ -138,33 +170,95 @@
     if(mo<1 || mo>12) return null;
     return {y, m: mo};
   }
+  function monthIndex(y,m){ return y*12 + (m-1); }
+  function fromMonthIndex(idx){
+    const y = Math.floor(idx/12);
+    const m = (idx % 12) + 1;
+    return {y,m};
+  }
 
-  function load(){
+  function safeParse(key){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const data = raw ? JSON.parse(raw) : [];
-      return Array.isArray(data) ? data : [];
-    }catch{
-      return [];
-    }
-  }
-  function save(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
+      const raw = localStorage.getItem(key);
+      if(!raw) return null;
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data : null;
+    }catch{ return null; }
   }
 
-  let props = load();
+  // Normalisierung: stellt sicher, dass alle Felder vorhanden sind
+  function normalize(p){
+    const id = p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    const name = p.name || p.objektname || "Unbenannt";
+    const units = Math.max(1, Math.floor(+p.units || +p.einheiten || 1));
+
+    const loan = p.loan || {};
+    const startYm = loan.startYm || p.startYm || p.start || p.darlehenStart || "";
+    const principal = +loan.principal || +p.principal || +p.startschuld || 0;
+    const interestPa = +loan.interestPa || +p.interestPa || +p.zins || 0;
+    const paymentMonthly = +loan.paymentMonthly || +p.paymentMonthly || +p.rate || 0;
+
+    const utilitiesMonthly = +p.utilitiesMonthly || +p.nebenkosten || 0;
+
+    let unitRents = p.unitRents;
+    if(!Array.isArray(unitRents)) unitRents = [];
+    // falls früher warmmiete gesamt gespeichert wurde:
+    const warmTotal = +p.warmRentTotal || +p.warmmiete || +p.kaltmiete || 0;
+    if(unitRents.length === 0 && warmTotal > 0){
+      // verteile grob gleichmäßig
+      const per = warmTotal / units;
+      unitRents = Array.from({length: units}, (_,i)=> round2(per));
+    }
+    // auf Anzahl Einheiten trimmen/auffüllen
+    unitRents = unitRents.slice(0, units);
+    while(unitRents.length < units) unitRents.push(0);
+
+    return {
+      id, name, units,
+      unitRents,
+      utilitiesMonthly: isFinite(utilitiesMonthly)?utilitiesMonthly:0,
+      loan: {
+        startYm,
+        principal: isFinite(principal)?principal:0,
+        interestPa: isFinite(interestPa)?interestPa:0,
+        paymentMonthly: isFinite(paymentMonthly)?paymentMonthly:0,
+        extras: Array.isArray(loan.extras) ? loan.extras : []
+      }
+    };
+  }
+
+  function loadWithMigration(){
+    // 1) aktueller key
+    const cur = safeParse(STORAGE_KEY);
+    if(cur && cur.length){
+      return cur.map(normalize);
+    }
+    // 2) Migration: ersten Legacy-Key finden, der Daten hat
+    for(const k of LEGACY_KEYS){
+      const d = safeParse(k);
+      if(d && d.length){
+        const norm = d.map(normalize);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(norm));
+        return norm;
+      }
+    }
+    return [];
+  }
+
+  let props = loadWithMigration();
+  function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(props)); }
+
   el("loadedInfo").textContent = `Geladen: ${props.length} Objekt(e)`;
 
   let selectedYear = new Date().getFullYear();
 
-  // --- Edit mode
+  // Edit Mode
   let editingId = null;
   function setEditMode(on){
     el("editPill").style.display = on ? "inline-block" : "none";
     el("cancelEdit").style.display = on ? "inline-block" : "none";
     el("saveProperty").textContent = on ? "Änderungen speichern ✅" : "Objekt speichern ✅";
   }
-
   function clearForm(){
     el("p_name").value="";
     el("p_units").value="";
@@ -179,7 +273,7 @@
     setEditMode(false);
   }
 
-  // --- Units
+  // Unit fields
   function readUnitRents(){
     return [...el("unitRents").querySelectorAll("input[data-unit]")].map(i => +i.value || 0);
   }
@@ -188,9 +282,9 @@
     wrap.innerHTML="";
     const n = Math.max(0, Math.floor(units||0));
     for(let i=0;i<n;i++){
-      const d=document.createElement("div");
+      const d = document.createElement("div");
       d.style.marginBottom="8px";
-      d.innerHTML=`
+      d.innerHTML = `
         <label class="tiny">Einheit ${i+1} – Warmmiete/Monat (€)</label>
         <input type="number" step="0.01" data-unit="${i}" value="${existing[i] ?? ""}">
       `;
@@ -203,34 +297,106 @@
     buildUnitRentFields(units, readUnitRents());
   };
 
-  function cashflowMonth(p){
-    const warm = (p.unitRents||[]).reduce((s,x)=>s+(+x||0),0);
-    const util = +p.utilitiesMonthly||0;
-    const rate = +p.loan.paymentMonthly||0;
-    return warm - util - rate;
-  }
   function cashClass(v){ return v >= 0 ? "pos" : "neg"; }
+
+  // Jahresberechnung (Annuität, Zinsen, Tilgung, Restschuld)
+  function calcYear(p, year){
+    const start = parseYearMonth(p.loan.startYm);
+    if(!start) return null;
+
+    const iMonthly = (p.loan.interestPa/100)/12;
+    const payment = p.loan.paymentMonthly;
+
+    const startIdx = monthIndex(start.y, start.m);
+    const endIdx = monthIndex(year, 12);
+
+    let balance = p.loan.principal;
+
+    let interestPaid=0, principalPaid=0, months=0;
+
+    for(let idx=startIdx; idx<=endIdx; idx++){
+      if(balance <= 0){ balance = 0; break; }
+
+      const interest = balance * iMonthly;
+      let rate = payment;
+
+      const need = balance + interest;
+      if(rate > need) rate = need;
+
+      const prin = Math.max(0, rate - interest);
+      balance = balance - prin;
+
+      const ym = fromMonthIndex(idx);
+      if(ym.y === year){
+        months++;
+        interestPaid += interest;
+        principalPaid += prin;
+      }
+    }
+
+    const warmMonth = (p.unitRents || []).reduce((s,x)=> s + (+x||0), 0);
+    const utilMonth = (+p.utilitiesMonthly||0);
+    const cfMonth = warmMonth - utilMonth - payment;
+
+    return {
+      balanceEnd: round2(balance),
+      interestPaid: round2(interestPaid),
+      principalPaid: round2(principalPaid),
+      effTilg: round2(principalPaid),
+      cfYear: round2(cfMonth * 12),
+      cfMonth: round2(cfMonth),
+      warmMonth: round2(warmMonth),
+      rateMonth: round2(payment)
+    };
+  }
+
+  function renderTotals(){
+    let totBal=0, totInt=0, totPrin=0, totEff=0, totCfYear=0, totWarmMonth=0, totRateMonth=0;
+    props.forEach(p=>{
+      const y = calcYear(p, selectedYear);
+      if(!y) return;
+      totBal += y.balanceEnd;
+      totInt += y.interestPaid;
+      totPrin += y.principalPaid;
+      totEff += y.effTilg;
+      totCfYear += y.cfYear;
+      totWarmMonth += y.warmMonth;
+      totRateMonth += y.rateMonth;
+    });
+
+    el("tot_balance").textContent = fmtEur(round2(totBal));
+    el("tot_interest").textContent = fmtEur(round2(totInt));
+    el("tot_principal").textContent = fmtEur(round2(totPrin));
+    el("tot_efftilg").textContent = fmtEur(round2(totEff));
+
+    const cfYearEl = el("tot_cf_year");
+    cfYearEl.textContent = fmtEur(round2(totCfYear));
+    cfYearEl.className = "v " + cashClass(totCfYear);
+
+    const cfMonth = totCfYear/12;
+    const cfMonthEl = el("tot_cf_month");
+    cfMonthEl.textContent = fmtEur(round2(cfMonth));
+    cfMonthEl.className = "v " + cashClass(cfMonth);
+
+    el("tot_warm_month").textContent = fmtEur(round2(totWarmMonth));
+    el("tot_rate_month").textContent = fmtEur(round2(totRateMonth));
+  }
 
   function render(){
     el("yearLabel").textContent = selectedYear;
-    el("loadedInfo").textContent = `Gespeichert: ${props.length} Objekt(e)`;
+    el("loadedInfo").textContent = `Gespeichert: ${props.length} Objekt(e) (bleibt nach Reload)`;
+    renderTotals();
 
     const list = el("list");
-    list.innerHTML="";
-
-    if(!props.length){
-      const empty = document.createElement("div");
-      empty.className = "card";
-      empty.innerHTML = `<div class="tiny">Noch keine Objekte gespeichert. Lege oben ein Objekt an.</div>`;
-      list.appendChild(empty);
-      return;
-    }
+    list.innerHTML = "";
 
     props.forEach(p=>{
-      const cf = cashflowMonth(p);
+      const y = calcYear(p, selectedYear);
+      const cf = y ? y.cfMonth : 0;
 
-      const det=document.createElement("details");
-      const sum=document.createElement("summary");
+      const det = document.createElement("details");
+      const sum = document.createElement("summary");
+
       sum.innerHTML = `
         <div class="row" style="width:100%">
           <div>
@@ -241,13 +407,18 @@
         </div>
       `;
 
-      const inner=document.createElement("div");
-      inner.className="inner";
+      const inner = document.createElement("div");
+      inner.className = "inner";
       inner.innerHTML = `
-        <div class="tiny" style="margin-top:10px">
-          Warmmieten: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}
-          <br>Nebenkosten: ${fmtEur(+p.utilitiesMonthly||0)}/Monat
+        <div class="kpis" style="margin-top:12px">
+          <div class="kpi"><div class="t">Warmmiete (Monat)</div><div class="v">${fmtEur(y?.warmMonth||0)}</div></div>
+          <div class="kpi"><div class="t">Cashflow (Monat)</div><div class="v ${cashClass(cf)}">${fmtEur(cf)}</div></div>
+          <div class="kpi"><div class="t">Zinsen (Jahr)</div><div class="v">${fmtEur(y?.interestPaid||0)}</div></div>
+          <div class="kpi"><div class="t">Tilgung (Jahr)</div><div class="v">${fmtEur(y?.principalPaid||0)}</div></div>
         </div>
+        <div class="hr"></div>
+        <div class="tiny">Warmmieten: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}</div>
+        <div class="tiny">Nebenkosten: ${fmtEur(+p.utilitiesMonthly||0)}/Monat</div>
         <div class="hr"></div>
         <div class="row">
           <button class="btn" data-edit="${p.id}">Bearbeiten</button>
@@ -265,8 +436,8 @@
       b.onclick=()=>{
         const id=b.getAttribute("data-del");
         if(!confirm("Objekt wirklich löschen?")) return;
-        props=props.filter(x=>x.id!==id);
-        save();
+        props = props.filter(x=>x.id!==id);
+        persist();
         if(editingId===id) clearForm();
         render();
       };
@@ -304,7 +475,6 @@
     const name=(el("p_name").value||"").trim();
     const units=Math.max(0, Math.floor(+el("p_units").value));
     const startYm=(el("l_start").value||"").trim();
-
     const principal=+el("l_principal").value;
     const interestPa=+el("l_interest").value;
     const paymentMonthly=+el("l_payment").value;
@@ -326,5 +496,55 @@
       return;
     }
 
-    const obj = {
-      id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString
+    const obj = normalize({
+      id: editingId || undefined,
+      name, units, unitRents,
+      utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
+      loan: { startYm, principal, interestPa, paymentMonthly, extras: [] }
+    });
+
+    if(editingId){
+      const idx = props.findIndex(x=>x.id===editingId);
+      if(idx>=0) props[idx] = obj;
+    }else{
+      props.push(obj);
+    }
+
+    persist();
+    clearForm();
+    render();
+  };
+
+  el("cancelEdit").onclick=(e)=>{ e.preventDefault(); clearForm(); render(); };
+
+  el("prevYear").onclick=()=>{ selectedYear--; render(); };
+  el("nextYear").onclick=()=>{ selectedYear++; render(); };
+
+  el("exportBtn").onclick=()=>{ prompt("Kopieren:", JSON.stringify(props,null,2)); };
+  el("importBtn").onclick=()=>{
+    const raw=prompt("JSON einfügen:");
+    if(!raw) return;
+    try{
+      const data=JSON.parse(raw);
+      if(!Array.isArray(data)) throw new Error("Format falsch");
+      props = data.map(normalize);
+      persist();
+      clearForm();
+      render();
+      alert("Import ok");
+    }catch(err){ alert("Import Fehler: "+(err.message||err)); }
+  };
+  el("resetBtn").onclick=()=>{
+    if(!confirm("Alles löschen?")) return;
+    props=[];
+    persist();
+    clearForm();
+    render();
+  };
+
+  setEditMode(false);
+  render();
+})();
+</script>
+</body>
+</html>
