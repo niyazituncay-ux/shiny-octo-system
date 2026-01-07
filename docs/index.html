@@ -1,43 +1,335 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tunjay Holding</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tuncay</title>
+
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0b0f17;
-      color: #e9f0ff;
-      margin: 0;
-      padding: 40px 20px;
+    :root{
+      --bg:#0b0f17;
+      --card:#121a2a;
+      --muted:#9fb0d0;
+      --text:#e9f0ff;
+      --line:#24304a;
+      --ok:#37d67a;
+      --warn:#ffcc66;
+      --bad:#ff6b6b;
+      --btn:#0d1423;
+      --btnPrimary:#17305e;
     }
-    h1 {
-      margin-top: 0;
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#070a10,#0b0f17);
+      color:var(--text);
     }
-    .card {
-      background: #121a2a;
-      border: 1px solid #24304a;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 700px;
+    header{padding:22px 16px 10px;max-width:1100px;margin:0 auto;}
+    h1{margin:0 0 6px;font-size:30px;letter-spacing:.2px;}
+    .sub{color:var(--muted);font-size:14px;line-height:1.35;}
+    .wrap{max-width:1100px;margin:0 auto;padding:12px 16px 40px;display:grid;gap:14px;}
+    .card{
+      background:rgba(18,26,42,.92);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
     }
+    .card h2{margin:0 0 10px;font-size:16px;color:#d7e6ff;}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+    .right{margin-left:auto;}
+    .btn{
+      border:1px solid var(--line);
+      background:var(--btn);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .btn:hover{border-color:#3a4b73;}
+    .btn.primary{background:var(--btnPrimary);border-color:#2c4a86;}
+    .btn.danger{background:#3a1520;border-color:#6b2a3c;}
+    .pill{
+      display:inline-block;
+      font-size:12px;
+      padding:4px 8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--muted);
+    }
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;}
+    .f{grid-column:span 12;}
+    @media (min-width: 760px){
+      .f.sm6{grid-column:span 6;}
+      .f.sm4{grid-column:span 4;}
+      .f.sm3{grid-column:span 3;}
+      .f.sm2{grid-column:span 2;}
+    }
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+    input{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 10px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#0b1220;
+      color:var(--text);
+    }
+    input::placeholder{color:#6e7fa5;}
+    .hint{color:var(--muted);font-size:12px;margin-top:8px;}
+    .tiny{font-size:12px;color:var(--muted);}
+    .ok{color:var(--ok);}
+    .warn{color:var(--warn);}
+    .bad{color:var(--bad);}
+    .hr{height:1px;background:var(--line);margin:12px 0;}
+
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    @media (min-width: 760px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+    .kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px;}
+    .kpi .t{color:var(--muted);font-size:12px;}
+    .kpi .v{margin-top:6px;font-weight:700;font-size:16px;}
+
+    details{border-radius:14px;border:1px solid var(--line);background:rgba(18,26,42,.6);}
+    summary{cursor:pointer;padding:12px 14px;list-style:none;}
+    summary::-webkit-details-marker{display:none;}
+    .sumrow{display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
+    .sumrow .name{font-weight:700;}
+    .sumrow .meta{color:var(--muted);font-size:12px;}
+    .inner{padding:0 14px 14px;border-top:1px solid var(--line);}
+
+    .table{width:100%;border-collapse:collapse;margin-top:10px;}
+    .table th,.table td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;font-size:12px;}
+    .table th{color:var(--muted);font-weight:600;}
+    .table td:first-child,.table th:first-child{text-align:left;}
   </style>
 </head>
+
 <body>
+<header>
+  <h1>Tuncay</h1>
+  <div class="sub">
+    Immobilien-Dashboard: Objekt-Kopfkarte → speichern → Jahresansicht (Restschuld, Tilgung, Sondertilgung, Cashflow) pro Objekt + Gesamt.
+    <br/>Speicherung: lokal im Browser (LocalStorage).
+  </div>
+</header>
 
-  <h1>Tunjay Holding</h1>
+<div class="wrap">
 
+  <!-- YEAR + TOOLS -->
   <div class="card">
-    <h2>GitHub Pages läuft 🎉</h2>
-    <p>
-      Wenn du diesen Text siehst, ist deine Website erfolgreich über
-      <strong>/docs</strong> veröffentlicht.
-    </p>
-    <p>
-      Ab hier bauen wir Schritt für Schritt dein Immobilien-Tool.
-    </p>
+    <div class="row">
+      <button class="btn" id="prevYear">◀ Jahr</button>
+      <div class="pill">Jahr: <b id="yearLabel"></b></div>
+      <button class="btn" id="nextYear">Jahr ▶</button>
+
+      <div class="right row">
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <button class="btn" id="importBtn">Import JSON</button>
+        <button class="btn danger" id="resetBtn">Alles löschen</button>
+      </div>
+    </div>
+    <div class="hint">
+      Sondertilgungen: <b>Jahr / Monat / Betrag</b> (z.B. 2026 / 12 / 5000). Mehrere Einträge möglich.
+    </div>
   </div>
 
-</body>
-</html>
+  <!-- NEW OBJECT (KOPFKARTE) -->
+  <div class="card">
+    <h2>Neues Objekt anlegen (Kopfkarte)</h2>
+    <div class="grid">
+      <div class="f sm6">
+        <label>Objektname</label>
+        <input id="p_name" placeholder="z. B. MFH Lindenstraße 12" />
+      </div>
+      <div class="f sm3">
+        <label>Einheiten</label>
+        <input id="p_units" type="number" min="0" step="1" placeholder="z. B. 6" />
+      </div>
+      <div class="f sm3">
+        <label>Start Darlehen (YYYY-MM)</label>
+        <input id="l_start" placeholder="z. B. 2024-01" />
+      </div>
+
+      <div class="f sm4">
+        <label>Startschuld (€)</label>
+        <input id="l_principal" type="number" step="0.01" placeholder="z. B. 320000" />
+      </div>
+      <div class="f sm4">
+        <label>Zins p.a. (%)</label>
+        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 3.25" />
+      </div>
+      <div class="f sm4">
+        <label>Annuität / Rate pro Monat (€)</label>
+        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 1450" />
+      </div>
+
+      <div class="f sm4">
+        <label>Kaltmiete / Monat gesamt (€)</label>
+        <input id="cf_rent" type="number" step="0.01" placeholder="z. B. 2600" />
+      </div>
+      <div class="f sm4">
+        <label>Sonstige Einnahmen / Monat (€)</label>
+        <input id="cf_otherInc" type="number" step="0.01" placeholder="z. B. 150" />
+      </div>
+      <div class="f sm4">
+        <label>Nicht umlagefähige Kosten / Monat (€)</label>
+        <input id="cf_nonAlloc" type="number" step="0.01" placeholder="z. B. 280" />
+      </div>
+
+      <div class="f sm4">
+        <label>Instandhaltung / Monat (€)</label>
+        <input id="cf_maint" type="number" step="0.01" placeholder="z. B. 200" />
+      </div>
+      <div class="f sm4">
+        <label>Versicherung / Jahr (€)</label>
+        <input id="cf_insYear" type="number" step="0.01" placeholder="z. B. 480" />
+      </div>
+      <div class="f sm4">
+        <label>Grundsteuer / Jahr (€)</label>
+        <input id="cf_taxYear" type="number" step="0.01" placeholder="z. B. 360" />
+      </div>
+
+      <div class="f sm4">
+        <label>Leerstand (%)</label>
+        <input id="cf_vacRate" type="number" step="0.0001" placeholder="z. B. 3 für 3%" />
+      </div>
+
+      <div class="f sm8">
+        <label>Sondertilgung(en)</label>
+        <div id="extrasWrap"></div>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn" id="addExtra">+ Sondertilgung hinzufügen</button>
+          <span class="tiny">Format: Jahr / Monat / Betrag</span>
+        </div>
+      </div>
+
+      <div class="f">
+        <div class="row">
+          <button class="btn primary" id="saveProperty">Objekt speichern ✅</button>
+          <span class="tiny" id="saveMsg"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOTALS -->
+  <div class="card">
+    <h2>Gesamt (ausgewähltes Jahr)</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
+      <div class="kpi"><div class="t">Gesamt-Tilgung (im Jahr)</div><div class="v" id="tot_principalPaid">–</div></div>
+      <div class="kpi"><div class="t">Gesamt-Sondertilgung (im Jahr)</div><div class="v" id="tot_extraPaid">–</div></div>
+      <div class="kpi"><div class="t">Gesamt-Cashflow (im Jahr)</div><div class="v" id="tot_cashflow">–</div></div>
+    </div>
+    <div class="hint tiny">
+      Cashflow = (Miete + sonstige Einnahmen − Leerstand − Kosten) − (Raten). Sondertilgung wird in der Restschuld berücksichtigt (Liquidität optional später).
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <h2>Objekte</h2>
+    <div id="list"></div>
+    <div class="hint tiny">Objekt aufklappen für Details. Löschen entfernt das Objekt dauerhaft aus deinem Browser.</div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "tuncay_properties_v1";
+
+  const el = (id) => document.getElementById(id);
+  const fmtEur = (n) => {
+    if (!isFinite(n)) return "–";
+    return new Intl.NumberFormat("de-DE", { style:"currency", currency:"EUR" }).format(n);
+  };
+  const fmtNum = (n) => {
+    if (!isFinite(n)) return "–";
+    return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 }).format(n);
+  };
+  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function parseYearMonth(s){
+    const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
+    if(!m) return null;
+    const y = +m[1], mo = +m[2];
+    if(mo<1 || mo>12) return null;
+    return {y, m: mo};
+  }
+  function monthIndex(y,m){ return y*12 + (m-1); }
+  function fromMonthIndex(idx){
+    const y = Math.floor(idx/12);
+    const m = (idx % 12) + 1;
+    return {y,m};
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    }catch{ return []; }
+  }
+  function save(props){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
+  }
+
+  // --- Core calc: one loan, year summary ---
+  function calcYearForProperty(p, year){
+    const loan = p.loan;
+    const start = parseYearMonth(loan.startYm);
+    if(!start){
+      return {active:false, year, balanceEnd: loan.principal || 0, principalPaidYear:0, extraPaidYear:0, cashflowYear:0, interestPaidYear:0, monthsCounted:0, warnings:["Startdatum ungültig"]};
+    }
+
+    const iMonthly = (loan.interestPa / 100) / 12;
+    const payment = loan.paymentMonthly;
+
+    const startIdx = monthIndex(start.y, start.m);
+    const yearEndIdx = monthIndex(year, 12);
+
+    if(yearEndIdx < startIdx){
+      return {active:false, year, balanceEnd: loan.principal, principalPaidYear:0, extraPaidYear:0, cashflowYear:0, interestPaidYear:0, monthsCounted:0, warnings:["Start liegt in der Zukunft"]};
+    }
+
+    const extrasMap = new Map();
+    for(const ex of (loan.extras || [])){
+      const y = +ex.year, m = +ex.month, amt = +ex.amount;
+      if(!isFinite(y) || !isFinite(m) || !isFinite(amt)) continue;
+      if(m<1 || m>12 || amt<=0) continue;
+      const idx = monthIndex(y,m);
+      extrasMap.set(idx, (extrasMap.get(idx)||0) + amt);
+    }
+
+    let balance = loan.principal;
+    let principalPaidYear=0, extraPaidYear=0, interestPaidYear=0, cashflowYear=0, monthsCounted=0;
+
+    for(let idx=startIdx; idx<=yearEndIdx; idx++){
+      if(balance <= 0){ balance = 0; break; }
+
+      const interest = balance * iMonthly;
+      let rate = payment;
+
+      // cap last payment
+      const maxNeeded = balance + interest;
+      if(rate > maxNeeded) rate = maxNeeded;
+
+      const principalPaid = Math.max(0, rate - interest);
+
+      let extra = extrasMap.get(idx) || 0;
+      const remainingAfterPrincipal = balance - principalPaid;
+      if(extra > remainingAfterPrincipal) extra = Math.max(0, remainingAfterPrincipal);
+
+      balance = balance - principalPaid - extra;
+
+      const {y, m} = fromMonthIndex(idx);
+      if(y === year){
+        monthsCounted++;
+        principalPaidYear +=
