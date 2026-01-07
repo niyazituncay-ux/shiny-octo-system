@@ -7,17 +7,18 @@
   <style>
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#9fb0d0; --text:#e9f0ff; --line:#24304a;
-      --pos:#37d67a; --neg:#ff6b6b; --btn:#0d1423; --btnP:#17305e;
+      --pos:#37d67a; --neg:#ff6b6b; --btn:#0d1423; --btnP:#17305e; --btnD:#3a1520;
     }
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;}
     h1{margin:0 0 6px;font-size:30px}
+    h2{margin:0 0 10px;font-size:16px}
     .sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.35}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;max-width:1100px;margin:0 auto 14px;}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .right{margin-left:auto}
     .btn{border:1px solid var(--line);background:var(--btn);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
     .btn.primary{background:var(--btnP);border-color:#2c4a86}
-    .btn.danger{background:#3a1520;border-color:#6b2a3c}
+    .btn.danger{background:var(--btnD);border-color:#6b2a3c}
     .btn:hover{border-color:#3a4b73}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
     .f{grid-column:span 12}
@@ -28,12 +29,6 @@
     }
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--text)}
-    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    @media (min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
-    .kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px}
-    .kpi .t{color:var(--muted);font-size:12px}
-    .kpi .v{margin-top:6px;font-weight:800;font-size:16px}
-    .pos{color:var(--pos)} .neg{color:var(--neg)}
     details{border-radius:14px;border:1px solid var(--line);background:rgba(18,26,42,.6);max-width:1100px;margin:0 auto 10px}
     summary{cursor:pointer;padding:12px 14px;list-style:none}
     summary::-webkit-details-marker{display:none}
@@ -41,14 +36,17 @@
     .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
     .tiny{font-size:12px;color:var(--muted)}
     .hr{height:1px;background:var(--line);margin:12px 0}
-    .badgeEdit{display:inline-block;margin-left:8px;font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid #2c4a86;color:#cfe1ff;background:rgba(23,48,94,.35)}
+    .pos{color:var(--pos)} .neg{color:var(--neg)}
   </style>
 </head>
 
 <body>
   <div class="card">
     <h1>Tunjay Holding</h1>
-    <div class="sub">Version: <b>EDIT</b> · Objekte speichern & bearbeiten</div>
+    <div class="sub">
+      Version: <b>PERSIST+EDIT</b> · Daten bleiben nach Reload erhalten (localStorage).
+      <div class="tiny" id="loadedInfo"></div>
+    </div>
 
     <div class="row">
       <button class="btn" id="prevYear">◀ Jahr</button>
@@ -65,8 +63,10 @@
 
   <div class="card">
     <div class="row">
-      <h2 style="margin:0;font-size:16px">Objekt (Kopfkarte)</h2>
-      <span class="badgeEdit" id="editBadge" style="display:none">Bearbeitungsmodus aktiv</span>
+      <h2 style="margin:0">Objekt anlegen / bearbeiten</h2>
+      <div class="right">
+        <span class="pill" id="editPill" style="display:none">Bearbeiten aktiv</span>
+      </div>
     </div>
 
     <div class="grid" style="margin-top:10px">
@@ -125,7 +125,9 @@
 
 <script>
 (() => {
-  const STORAGE_KEY = "tunjay_objects_edit_v1";
+  // FIXER KEY: nie mehr ändern, sonst wirken Daten "weg"
+  const STORAGE_KEY = "tunjay_holding_properties";
+
   const el = (id) => document.getElementById(id);
   const fmtEur = (n) => new Intl.NumberFormat("de-DE", {style:"currency", currency:"EUR"}).format(isFinite(n)?n:0);
 
@@ -137,19 +139,32 @@
     return {y, m: mo};
   }
 
-  function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
-  function save(v){ localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); }
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    }catch{
+      return [];
+    }
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
+  }
 
   let props = load();
+  el("loadedInfo").textContent = `Geladen: ${props.length} Objekt(e)`;
+
   let selectedYear = new Date().getFullYear();
 
-  // EDIT MODE
+  // --- Edit mode
   let editingId = null;
   function setEditMode(on){
-    el("editBadge").style.display = on ? "inline-block" : "none";
+    el("editPill").style.display = on ? "inline-block" : "none";
     el("cancelEdit").style.display = on ? "inline-block" : "none";
     el("saveProperty").textContent = on ? "Änderungen speichern ✅" : "Objekt speichern ✅";
   }
+
   function clearForm(){
     el("p_name").value="";
     el("p_units").value="";
@@ -164,6 +179,7 @@
     setEditMode(false);
   }
 
+  // --- Units
   function readUnitRents(){
     return [...el("unitRents").querySelectorAll("input[data-unit]")].map(i => +i.value || 0);
   }
@@ -181,8 +197,7 @@
       wrap.appendChild(d);
     }
   }
-
-  el("buildUnits").onclick = (e)=>{
+  el("buildUnits").onclick=(e)=>{
     e.preventDefault();
     const units = +el("p_units").value;
     buildUnitRentFields(units, readUnitRents());
@@ -194,44 +209,71 @@
     const rate = +p.loan.paymentMonthly||0;
     return warm - util - rate;
   }
+  function cashClass(v){ return v >= 0 ? "pos" : "neg"; }
 
   function render(){
     el("yearLabel").textContent = selectedYear;
+    el("loadedInfo").textContent = `Gespeichert: ${props.length} Objekt(e)`;
+
     const list = el("list");
     list.innerHTML="";
 
+    if(!props.length){
+      const empty = document.createElement("div");
+      empty.className = "card";
+      empty.innerHTML = `<div class="tiny">Noch keine Objekte gespeichert. Lege oben ein Objekt an.</div>`;
+      list.appendChild(empty);
+      return;
+    }
+
     props.forEach(p=>{
       const cf = cashflowMonth(p);
+
       const det=document.createElement("details");
-      det.innerHTML=`
-        <summary>
-          <div style="font-weight:800">${p.name}</div>
-          <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat · Cashflow ${fmtEur(cf)}/Monat</div>
-        </summary>
-        <div class="inner">
-          <div class="hr"></div>
-          <div class="row">
-            <button class="btn" data-edit="${p.id}">Bearbeiten</button>
-            <button class="btn danger" data-del="${p.id}">Objekt löschen</button>
+      const sum=document.createElement("summary");
+      sum.innerHTML = `
+        <div class="row" style="width:100%">
+          <div>
+            <div style="font-weight:800">${p.name}</div>
+            <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat</div>
           </div>
+          <div class="pill">Cashflow: <b class="${cashClass(cf)}">${fmtEur(cf)}/Monat</b></div>
         </div>
       `;
+
+      const inner=document.createElement("div");
+      inner.className="inner";
+      inner.innerHTML = `
+        <div class="tiny" style="margin-top:10px">
+          Warmmieten: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}
+          <br>Nebenkosten: ${fmtEur(+p.utilitiesMonthly||0)}/Monat
+        </div>
+        <div class="hr"></div>
+        <div class="row">
+          <button class="btn" data-edit="${p.id}">Bearbeiten</button>
+          <button class="btn danger" data-del="${p.id}">Objekt löschen</button>
+        </div>
+      `;
+
+      det.appendChild(sum);
+      det.appendChild(inner);
       list.appendChild(det);
     });
 
-    // delete
-    [...document.querySelectorAll("[data-del]")].forEach(b=>{
+    // Delete
+    document.querySelectorAll("[data-del]").forEach(b=>{
       b.onclick=()=>{
         const id=b.getAttribute("data-del");
+        if(!confirm("Objekt wirklich löschen?")) return;
         props=props.filter(x=>x.id!==id);
-        save(props);
+        save();
         if(editingId===id) clearForm();
         render();
       };
     });
 
-    // edit
-    [...document.querySelectorAll("[data-edit]")].forEach(b=>{
+    // Edit
+    document.querySelectorAll("[data-edit]").forEach(b=>{
       b.onclick=()=>{
         const id=b.getAttribute("data-edit");
         const p=props.find(x=>x.id===id);
@@ -255,6 +297,7 @@
     });
   }
 
+  // Save / Update
   el("saveProperty").onclick=(e)=>{
     e.preventDefault();
 
@@ -283,53 +326,5 @@
       return;
     }
 
-    const payload={
-      name, units, unitRents,
-      utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
-      loan:{ startYm, principal, interestPa, paymentMonthly }
-    };
-
-    if(editingId){
-      const idx=props.findIndex(x=>x.id===editingId);
-      if(idx>=0){
-        props[idx]={...props[idx], ...payload};
-        save(props);
-        el("saveMsg").textContent="✅ Aktualisiert.";
-      }
-      clearForm();
-    }else{
-      const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
-      props.push({id, ...payload});
-      save(props);
-      clearForm();
-    }
-    render();
-  };
-
-  el("cancelEdit").onclick=(e)=>{ e.preventDefault(); clearForm(); render(); };
-
-  el("prevYear").onclick=()=>{ selectedYear--; render(); };
-  el("nextYear").onclick=()=>{ selectedYear++; render(); };
-
-  el("exportBtn").onclick=()=>{ prompt("Kopieren:", JSON.stringify(props,null,2)); };
-  el("importBtn").onclick=()=>{
-    const raw=prompt("JSON einfügen:");
-    if(!raw) return;
-    try{
-      const data=JSON.parse(raw);
-      if(!Array.isArray(data)) throw new Error("Format falsch");
-      props=data; save(props); clearForm(); render(); alert("Import ok");
-    }catch(err){ alert("Import Fehler: "+(err.message||err)); }
-  };
-  el("resetBtn").onclick=()=>{
-    if(!confirm("Alles löschen?")) return;
-    props=[]; save(props); clearForm(); render();
-  };
-
-  el("yearLabel").textContent=selectedYear;
-  setEditMode(false);
-  render();
-})();
-</script>
-</body>
-</html>
+    const obj = {
+      id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString
