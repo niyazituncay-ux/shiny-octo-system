@@ -1,198 +1,489 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tunjay Holding</title>
-
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0b0f17;
-      color: #e9f0ff;
-      margin: 0;
-      padding: 24px;
+    :root{
+      --bg:#0b0f17; --card:#121a2a; --muted:#9fb0d0; --text:#e9f0ff; --line:#24304a;
+      --pos:#37d67a; --neg:#ff6b6b; --btn:#0d1423; --btnP:#17305e;
     }
-    h1 { margin-top: 0; font-size: 32px; }
-    h2 { margin-top: 0; }
-
-    .card {
-      background: #121a2a;
-      border: 1px solid #24304a;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 900px;
-      margin-bottom: 20px;
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;}
+    h1{margin:0 0 6px;font-size:30px}
+    .sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.35}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;max-width:1100px;margin:0 auto 14px;}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .right{margin-left:auto}
+    .btn{border:1px solid var(--line);background:var(--btn);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:var(--btnP);border-color:#2c4a86}
+    .btn:hover{border-color:#3a4b73}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+    .f{grid-column:span 12}
+    @media (min-width:760px){
+      .f.sm6{grid-column:span 6}
+      .f.sm4{grid-column:span 4}
+      .f.sm3{grid-column:span 3}
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
-
-    label {
-      font-size: 13px;
-      color: #9fb0d0;
-    }
-
-    input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #24304a;
-      background: #0d1423;
-      color: #e9f0ff;
-      margin-top: 4px;
-    }
-
-    button {
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      background: #1f6feb;
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #30363d;
-    }
-
-    .objects {
-      display: grid;
-      gap: 16px;
-      max-width: 900px;
-    }
-
-    .object {
-      border: 1px solid #24304a;
-      border-radius: 10px;
-      padding: 16px;
-      background: #0d1423;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 6px;
-      font-size: 14px;
-    }
-
-    .muted { color: #9fb0d0; }
-
-    .year-nav {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--text)}
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    @media (min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+    .kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .kpi .t{color:var(--muted);font-size:12px}
+    .kpi .v{margin-top:6px;font-weight:800;font-size:16px}
+    .pos{color:var(--pos)} .neg{color:var(--neg)}
+    details{border-radius:14px;border:1px solid var(--line);background:rgba(18,26,42,.6);max-width:1100px;margin:0 auto 10px}
+    summary{cursor:pointer;padding:12px 14px;list-style:none}
+    summary::-webkit-details-marker{display:none}
+    .inner{padding:0 14px 14px;border-top:1px solid var(--line)}
+    .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+    .tiny{font-size:12px;color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:12px 0}
   </style>
 </head>
 
 <body>
-
-<h1>Tunjay Holding</h1>
-
-<div class="card">
-  <h2>Objekt anlegen</h2>
-
-  <div class="grid">
-    <div>
-      <label>Objektname</label>
-      <input id="name">
+  <div class="card">
+    <h1>Tunjay Holding</h1>
+    <div class="sub">
+      Version: <b>CF+Totals+Units</b> · Warmmieten pro Einheit (monatlich) · Nebenkosten (monatlich) · Rate (monatlich) · Jahr-Navigation
     </div>
 
-    <div>
-      <label>Restschuld (€)</label>
-      <input id="debt" type="number">
-    </div>
+    <div class="row">
+      <button class="btn" id="prevYear">◀ Jahr</button>
+      <div class="pill">Jahr: <b id="yearLabel"></b></div>
+      <button class="btn" id="nextYear">Jahr ▶</button>
 
-    <div>
-      <label>Zins p.a. (%)</label>
-      <input id="interest" type="number" step="0.01">
+      <div class="right row">
+        <button class="btn" id="exportBtn">Export</button>
+        <button class="btn" id="importBtn">Import</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
     </div>
-
-    <div>
-      <label>Annuität pro Jahr (€)</label>
-      <input id="annuity" type="number">
-    </div>
-
-    <div>
-      <label>Warmmiete pro Jahr (€)</label>
-      <input id="warmRent" type="number">
-    </div>
-
-    <div>
-      <label>Nebenkosten (die wir zahlen) pro Jahr (€)</label>
-      <input id="utilities" type="number">
+    <div class="tiny" style="margin-top:8px">
+      Cashflow/Liquidität = Warmmiete − Nebenkosten (die ihr zahlt) − Rate. (Weitere Kosten bauen wir als nächstes optional dazu.)
     </div>
   </div>
 
-  <br>
-  <button onclick="addObject()">Objekt speichern</button>
-</div>
+  <div class="card">
+    <h2 style="margin:0 0 10px;font-size:16px">Neues Objekt anlegen (Kopfkarte)</h2>
 
-<div class="card year-nav">
-  <button class="secondary" onclick="year--">◀</button>
-  <strong>Jahr: <span id="year">1</span></strong>
-  <button class="secondary" onclick="year++">▶</button>
-</div>
+    <div class="grid">
+      <div class="f sm6">
+        <label>Objektname</label>
+        <input id="p_name" placeholder="z. B. MFH Lindenstraße 12">
+      </div>
+      <div class="f sm3">
+        <label>Einheiten</label>
+        <input id="p_units" type="number" min="1" step="1" placeholder="z. B. 6">
+      </div>
+      <div class="f sm3">
+        <label>Start Darlehen (YYYY-MM)</label>
+        <input id="l_start" placeholder="z. B. 2024-01">
+      </div>
 
-<div class="objects" id="objects"></div>
+      <div class="f sm4">
+        <label>Startschuld (€)</label>
+        <input id="l_principal" type="number" step="0.01" placeholder="z. B. 320000">
+      </div>
+      <div class="f sm4">
+        <label>Zins p.a. (%)</label>
+        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 3.25">
+      </div>
+      <div class="f sm4">
+        <label>Annuität / Rate pro Monat (€)</label>
+        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 1450">
+      </div>
+
+      <div class="f sm6">
+        <label>Nebenkosten (ihr zahlt) pro Monat (€)</label>
+        <input id="cf_util" type="number" step="0.01" placeholder="z. B. 600">
+      </div>
+
+      <div class="f sm6">
+        <label>Warmmieten pro Einheit (monatlich)</label>
+        <div id="unitRents"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="buildUnits">Felder erstellen</button>
+          <span class="tiny">Trage pro Einheit die Warmmiete/Monat ein.</span>
+        </div>
+      </div>
+
+      <div class="f sm6">
+        <label>Sondertilgung (jährlich, optional)</label>
+        <div class="row">
+          <input id="ex_year" type="number" placeholder="Jahr z.B. 2026" style="max-width:180px">
+          <input id="ex_amount" type="number" step="0.01" placeholder="Betrag € z.B. 5000" style="max-width:240px">
+          <button class="btn" id="addExtra">+ hinzufügen</button>
+        </div>
+        <div class="tiny" id="extrasList" style="margin-top:6px"></div>
+      </div>
+
+      <div class="f sm6">
+        <label>&nbsp;</label>
+        <div class="row">
+          <button class="btn primary" id="saveProperty">Objekt speichern ✅</button>
+          <span class="tiny" id="saveMsg"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px;font-size:16px">Gesamt (ausgewähltes Jahr)</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Tilgung effektiv (Jahr)</div><div class="v" id="tot_tilg_year">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Tilgung effektiv (Monat Ø)</div><div class="v" id="tot_tilg_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="tot_cf_year">–</div></div>
+    </div>
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi"><div class="t">Gesamt Cashflow (Monat Ø)</div><div class="v" id="tot_cf_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Warmmiete (Monat)</div><div class="v" id="tot_warm_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Nebenkosten (Monat)</div><div class="v" id="tot_util_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Rate (Monat)</div><div class="v" id="tot_rate_month">–</div></div>
+    </div>
+  </div>
+
+  <div id="list"></div>
 
 <script>
-  let objects = [];
-  let year = 1;
+(() => {
+  const STORAGE_KEY = "tunjay_cf_units_v1";
+  const el = (id) => document.getElementById(id);
 
-  function addObject() {
-    objects.push({
-      name: name.value,
-      debt: +debt.value,
-      interest: +interest.value / 100,
-      annuity: +annuity.value,
-      warmRent: +warmRent.value,
-      utilities: +utilities.value
-    });
-    render();
+  const fmtEur = (n) => new Intl.NumberFormat("de-DE", {style:"currency", currency:"EUR"}).format(isFinite(n)?n:0);
+  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+  function parseYearMonth(s){
+    const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
+    if(!m) return null;
+    const y = +m[1], mo = +m[2];
+    if(mo<1 || mo>12) return null;
+    return {y, m: mo};
+  }
+  function monthIndex(y,m){ return y*12 + (m-1); }
+  function fromMonthIndex(idx){
+    const y = Math.floor(idx/12);
+    const m = (idx % 12) + 1;
+    return {y,m};
   }
 
-  function render() {
-    document.getElementById("year").innerText = year;
-    const wrap = document.getElementById("objects");
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch{ return []; }
+  }
+  function save(props){ localStorage.setItem(STORAGE_KEY, JSON.stringify(props)); }
+
+  let props = load();
+  let selectedYear = new Date().getFullYear();
+
+  // --- Unit rent fields
+  function buildUnitRentFields(units, existing=[]){
+    const wrap = el("unitRents");
     wrap.innerHTML = "";
-
-    objects.forEach(o => {
-      let d = o.debt;
-
-      for (let i = 1; i < year; i++) {
-        const z = d * o.interest;
-        const t = o.annuity - z;
-        d -= t;
-      }
-
-      const interestYear = d * o.interest;
-      const repayment = o.annuity - interestYear;
-
-      const liquidität =
-        o.warmRent
-        - o.utilities
-        - o.annuity;
-
-      const el = document.createElement("div");
-      el.className = "object";
-      el.innerHTML = `
-        <h3>${o.name}</h3>
-        <div class="row"><span class="muted">Restschuld</span><span>${d.toFixed(0)} €</span></div>
-        <div class="row"><span class="muted">Zinsen</span><span>${interestYear.toFixed(0)} €</span></div>
-        <div class="row"><span class="muted">Tilgung</span><span>${repayment.toFixed(0)} €</span></div>
-        <div class="row"><span class="muted">Liquidität</span><span>${liquidität.toFixed(0)} €</span></div>
+    const n = Math.max(0, Math.floor(units||0));
+    for(let i=0;i<n;i++){
+      const d = document.createElement("div");
+      d.style.marginBottom = "8px";
+      d.innerHTML = `
+        <label class="tiny">Einheit ${i+1} – Warmmiete/Monat (€)</label>
+        <input type="number" step="0.01" data-unit="${i}" placeholder="z. B. 650" value="${existing[i] ?? ""}">
       `;
-      wrap.appendChild(el);
+      wrap.appendChild(d);
+    }
+  }
+
+  el("buildUnits").addEventListener("click", (e)=>{
+    e.preventDefault();
+    const units = +el("p_units").value;
+    buildUnitRentFields(units);
+  });
+
+  // --- Extras (yearly)
+  let extrasDraft = []; // {year, amount}
+  function renderExtrasDraft(){
+    el("extrasList").textContent = extrasDraft.length
+      ? ("Sondertilgungen: " + extrasDraft.map(x => `${x.year}: ${fmtEur(x.amount)}`).join(" · "))
+      : "Sondertilgungen: keine";
+  }
+  el("addExtra").addEventListener("click", (e)=>{
+    e.preventDefault();
+    const y = +el("ex_year").value;
+    const a = +el("ex_amount").value;
+    if(!isFinite(y) || y<1900 || y>3000 || !isFinite(a) || a<=0) return;
+    extrasDraft.push({year:y, amount:a});
+    el("ex_year").value = "";
+    el("ex_amount").value = "";
+    renderExtrasDraft();
+  });
+  renderExtrasDraft();
+
+  // --- Core calc year
+  function calcYear(p, year){
+    const start = parseYearMonth(p.loan.startYm);
+    if(!start) return null;
+
+    const iMonthly = (p.loan.interestPa/100)/12;
+    const payment = p.loan.paymentMonthly;
+
+    const startIdx = monthIndex(start.y, start.m);
+    const endIdx = monthIndex(year, 12);
+
+    let balance = p.loan.principal;
+
+    let interestPaid=0, principalPaid=0, extraPaid=0, months=0;
+
+    // extras: only year-based, applied in Dezember of that year
+    const extraDecMap = new Map();
+    for(const ex of (p.loan.extras||[])){
+      const idx = monthIndex(ex.year, 12);
+      extraDecMap.set(idx, (extraDecMap.get(idx)||0) + ex.amount);
+    }
+
+    for(let idx=startIdx; idx<=endIdx; idx++){
+      if(balance <= 0){ balance = 0; break; }
+
+      const interest = balance * iMonthly;
+      let rate = payment;
+
+      // cap last rate
+      const need = balance + interest;
+      if(rate > need) rate = need;
+
+      const prin = Math.max(0, rate - interest);
+
+      let extra = extraDecMap.get(idx) || 0;
+      if(extra > (balance - prin)) extra = Math.max(0, balance - prin);
+
+      balance = balance - prin - extra;
+
+      const ym = fromMonthIndex(idx);
+      if(ym.y === year){
+        months++;
+        interestPaid += interest;
+        principalPaid += prin;
+        extraPaid += extra;
+      }
+    }
+
+    // Cashflow model (monthly)
+    const warmMonth = (p.unitRents || []).reduce((s,x)=> s + (+x||0), 0);
+    const utilMonth = (+p.utilitiesMonthly||0);
+    const cfMonth = warmMonth - utilMonth - payment;
+
+    return {
+      year,
+      balanceEnd: round2(balance),
+      interestPaid: round2(interestPaid),
+      principalPaid: round2(principalPaid),
+      extraPaid: round2(extraPaid),
+      effTilg: round2(principalPaid + extraPaid),
+      cfYear: round2(cfMonth * 12),
+      cfMonth: round2(cfMonth),
+      warmMonth: round2(warmMonth),
+      utilMonth: round2(utilMonth),
+      rateMonth: round2(payment),
+      monthsActive: months
+    };
+  }
+
+  function cashClass(v){ return v >= 0 ? "pos" : "neg"; }
+
+  function render(){
+    el("yearLabel").textContent = selectedYear;
+
+    let tot = {
+      balance:0, effTilgYear:0, cfYear:0,
+      warmMonth:0, utilMonth:0, rateMonth:0
+    };
+
+    const list = el("list");
+    list.innerHTML = "";
+
+    props.forEach(p=>{
+      const y = calcYear(p, selectedYear);
+      if(!y) return;
+
+      tot.balance += y.balanceEnd;
+      tot.effTilgYear += y.effTilg;
+      tot.cfYear += y.cfYear;
+      tot.warmMonth += y.warmMonth;
+      tot.utilMonth += y.utilMonth;
+      tot.rateMonth += y.rateMonth;
+
+      const det = document.createElement("details");
+      const sum = document.createElement("summary");
+
+      sum.innerHTML = `
+        <div class="row" style="width:100%">
+          <div>
+            <div style="font-weight:800">${p.name}</div>
+            <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Zins ${p.loan.interestPa}% · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat</div>
+          </div>
+          <div style="text-align:right">
+            <div class="pill">Cashflow: <b class="${cashClass(y.cfMonth)}">${fmtEur(y.cfMonth)}/Monat</b></div>
+            <div class="pill" style="margin-left:6px">Rest: <b>${fmtEur(y.balanceEnd)}</b></div>
+          </div>
+        </div>
+      `;
+
+      const inner = document.createElement("div");
+      inner.className = "inner";
+      inner.innerHTML = `
+        <div class="kpis" style="margin-top:12px">
+          <div class="kpi"><div class="t">Warmmiete (Monat)</div><div class="v">${fmtEur(y.warmMonth)}</div></div>
+          <div class="kpi"><div class="t">Nebenkosten (Monat)</div><div class="v">${fmtEur(y.utilMonth)}</div></div>
+          <div class="kpi"><div class="t">Cashflow (Monat)</div><div class="v ${cashClass(y.cfMonth)}">${fmtEur(y.cfMonth)}</div></div>
+          <div class="kpi"><div class="t">Cashflow (Jahr)</div><div class="v ${cashClass(y.cfYear)}">${fmtEur(y.cfYear)}</div></div>
+        </div>
+
+        <div class="kpis" style="margin-top:10px">
+          <div class="kpi"><div class="t">Zinsen (Jahr)</div><div class="v">${fmtEur(y.interestPaid)}</div></div>
+          <div class="kpi"><div class="t">Tilgung (Jahr)</div><div class="v">${fmtEur(y.principalPaid)}</div></div>
+          <div class="kpi"><div class="t">Sondertilgung (Jahr)</div><div class="v">${fmtEur(y.extraPaid)}</div></div>
+          <div class="kpi"><div class="t">Eff. Tilgung (Jahr)</div><div class="v">${fmtEur(y.effTilg)}</div></div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="tiny">Warmmieten je Einheit: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}</div>
+        <div class="tiny">Sondertilgungen: ${(p.loan.extras||[]).length ? p.loan.extras.map(x=>`${x.year}: ${fmtEur(x.amount)}`).join(" · ") : "keine"}</div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <button class="btn" data-del="${p.id}">Objekt löschen</button>
+        </div>
+      `;
+
+      det.appendChild(sum);
+      det.appendChild(inner);
+      list.appendChild(det);
+    });
+
+    // totals
+    const totTilgMonth = tot.effTilgYear / 12;
+    const totCfMonth = tot.cfYear / 12;
+
+    el("tot_balance").textContent = fmtEur(round2(tot.balance));
+    el("tot_tilg_year").textContent = fmtEur(round2(tot.effTilgYear));
+    el("tot_tilg_month").textContent = fmtEur(round2(totTilgMonth));
+
+    const cfYearEl = el("tot_cf_year");
+    cfYearEl.textContent = fmtEur(round2(tot.cfYear));
+    cfYearEl.className = "v " + cashClass(tot.cfYear);
+
+    const cfMonthEl = el("tot_cf_month");
+    cfMonthEl.textContent = fmtEur(round2(totCfMonth));
+    cfMonthEl.className = "v " + cashClass(totCfMonth);
+
+    el("tot_warm_month").textContent = fmtEur(round2(tot.warmMonth));
+    el("tot_util_month").textContent = fmtEur(round2(tot.utilMonth));
+    el("tot_rate_month").textContent = fmtEur(round2(tot.rateMonth));
+
+    // bind delete
+    [...document.querySelectorAll("[data-del]")].forEach(b=>{
+      b.onclick = () => {
+        const id = b.getAttribute("data-del");
+        props = props.filter(x=>x.id!==id);
+        save(props);
+        render();
+      };
     });
   }
-</script>
 
+  // Save property
+  el("saveProperty").addEventListener("click", (e)=>{
+    e.preventDefault();
+    const msg = el("saveMsg");
+    msg.textContent = "";
+
+    const name = (el("p_name").value || "").trim();
+    const units = Math.max(0, Math.floor(+el("p_units").value));
+    const startYm = (el("l_start").value || "").trim();
+
+    const principal = +el("l_principal").value;
+    const interestPa = +el("l_interest").value;
+    const paymentMonthly = +el("l_payment").value;
+
+    const utilitiesMonthly = +el("cf_util").value;
+
+    // read unit rents from generated fields
+    const rentInputs = [...el("unitRents").querySelectorAll("input[data-unit]")];
+    const unitRents = rentInputs.map(i => +i.value || 0);
+
+    const errors = [];
+    if(!name) errors.push("Objektname fehlt");
+    if(!units || units<1) errors.push("Einheiten muss >= 1 sein");
+    if(!parseYearMonth(startYm)) errors.push("Startdatum muss YYYY-MM sein (z.B. 2024-01)");
+    if(!isFinite(principal) || principal<=0) errors.push("Startschuld ungültig");
+    if(!isFinite(interestPa) || interestPa<0) errors.push("Zins ungültig");
+    if(!isFinite(paymentMonthly) || paymentMonthly<=0) errors.push("Rate ungültig");
+
+    if(rentInputs.length !== units) errors.push("Bitte zuerst 'Felder erstellen' und Warmmieten je Einheit eintragen.");
+
+    if(errors.length){
+      msg.textContent = "❌ " + errors.join(" · ");
+      return;
+    }
+
+    const obj = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)),
+      name, units,
+      unitRents,
+      utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
+      loan: { startYm, principal, interestPa, paymentMonthly, extras: extrasDraft.slice() }
+    };
+
+    props.push(obj);
+    save(props);
+
+    // reset form
+    el("p_name").value = "";
+    el("p_units").value = "";
+    el("l_start").value = "";
+    el("l_principal").value = "";
+    el("l_interest").value = "";
+    el("l_payment").value = "";
+    el("cf_util").value = "";
+    el("unitRents").innerHTML = "";
+    extrasDraft = [];
+    renderExtrasDraft();
+
+    msg.textContent = "✅ Gespeichert.";
+    render();
+  });
+
+  // Year nav
+  el("prevYear").onclick = ()=>{ selectedYear--; render(); };
+  el("nextYear").onclick = ()=>{ selectedYear++; render(); };
+
+  // Export / Import / Reset
+  el("exportBtn").onclick = ()=>{
+    const data = JSON.stringify(props, null, 2);
+    prompt("Kopieren:", data);
+  };
+  el("importBtn").onclick = ()=>{
+    const raw = prompt("JSON einfügen:");
+    if(!raw) return;
+    try{
+      const data = JSON.parse(raw);
+      if(!Array.isArray(data)) throw new Error("Format falsch");
+      props = data;
+      save(props);
+      render();
+      alert("Import ok");
+    }catch(err){ alert("Import Fehler: " + (err.message||err)); }
+  };
+  el("resetBtn").onclick = ()=>{
+    if(!confirm("Alles löschen?")) return;
+    props = [];
+    save(props);
+    render();
+  };
+
+  render();
+})();
+</script>
 </body>
 </html>
