@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tunjay Holding</title>
+  <title>Tuncay Holding</title>
   <style>
     :root{
       --bg:#0b0f17; --card:#121a2a; --muted:#9fb0d0; --text:#e9f0ff; --line:#24304a;
       --pos:#37d67a; --neg:#ff6b6b; --btn:#0d1423; --btnP:#17305e; --btnD:#3a1520;
+      --field:#0b1220;
     }
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;}
     h1{margin:0 0 6px;font-size:30px}
@@ -28,10 +29,10 @@
       .f.sm3{grid-column:span 3}
     }
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--text)}
+    input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--text)}
     .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
     @media (min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
-    .kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .kpi{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px}
     .kpi .t{color:var(--muted);font-size:12px}
     .kpi .v{margin-top:6px;font-weight:800;font-size:16px}
     .pos{color:var(--pos)} .neg{color:var(--neg)}
@@ -42,15 +43,16 @@
     .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
     .tiny{font-size:12px;color:var(--muted)}
     .hr{height:1px;background:var(--line);margin:12px 0}
+    .hint{background:#0b1220;border:1px dashed #2c3f63;border-radius:12px;padding:10px;color:var(--muted);font-size:12px}
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h1>Tunjay Holding</h1>
+    <h1>Tuncay Holding</h1>
     <div class="sub">
-      Version: <b>PERSIST + MIGRATION + EDIT + TOTALS</b><br/>
-      Cashflow = Warmmiete − Nebenkosten (ihr zahlt) − Rate
+      Version: <b>STABLE + EDIT + TOTAL + SHARE</b><br/>
+      Cashflow = <b>Warmmiete</b> − <b>Nebenkosten (ihr zahlt)</b> − <b>Rate</b>
       <div class="tiny" id="loadedInfo"></div>
     </div>
 
@@ -60,6 +62,7 @@
       <button class="btn" id="nextYear">Jahr ▶</button>
 
       <div class="right row">
+        <button class="btn" id="shareBtn">Share-Link</button>
         <button class="btn" id="exportBtn">Export</button>
         <button class="btn" id="importBtn">Import</button>
         <button class="btn danger" id="resetBtn">Reset</button>
@@ -67,9 +70,27 @@
     </div>
   </div>
 
+  <!-- Gesamtbilanz -->
+  <div class="card">
+    <h2>Gesamtbilanz (ausgewähltes Jahr)</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Zinsen (Jahr)</div><div class="v" id="tot_interest">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Tilgung (Jahr)</div><div class="v" id="tot_principal">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="tot_cf_year">–</div></div>
+    </div>
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi"><div class="t">Gesamt Cashflow (Monat Ø)</div><div class="v" id="tot_cf_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Warmmiete (Monat)</div><div class="v" id="tot_warm_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Nebenkosten (Monat)</div><div class="v" id="tot_util_month">–</div></div>
+      <div class="kpi"><div class="t">Gesamt Rate (Monat)</div><div class="v" id="tot_rate_month">–</div></div>
+    </div>
+  </div>
+
+  <!-- Kopfkarte -->
   <div class="card">
     <div class="row">
-      <h2 style="margin:0">Objekt anlegen / bearbeiten (Kopfkarte)</h2>
+      <h2 style="margin:0">Neues Objekt anlegen (Kopfkarte)</h2>
       <div class="right">
         <span class="pill" id="editPill" style="display:none">Bearbeiten aktiv</span>
       </div>
@@ -78,7 +99,7 @@
     <div class="grid" style="margin-top:10px">
       <div class="f sm6">
         <label>Objektname</label>
-        <input id="p_name" placeholder="z. B. MFH Lindenstraße 12">
+        <input id="p_name" placeholder="z. B. MFH Breslauerstraße 12">
       </div>
       <div class="f sm3">
         <label>Einheiten</label>
@@ -86,7 +107,7 @@
       </div>
       <div class="f sm3">
         <label>Start Darlehen (YYYY-MM)</label>
-        <input id="l_start" placeholder="z. B. 2024-01">
+        <input id="l_start" placeholder="z. B. 2021-04">
       </div>
 
       <div class="f sm4">
@@ -95,16 +116,16 @@
       </div>
       <div class="f sm4">
         <label>Zins p.a. (%)</label>
-        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 3.25">
+        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 1.93">
       </div>
       <div class="f sm4">
-        <label>Annuität / Rate pro Monat (€)</label>
-        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 1450">
+        <label>Rate / Monat (€)</label>
+        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 2690">
       </div>
 
       <div class="f sm6">
-        <label>Nebenkosten (ihr zahlt) pro Monat (€)</label>
-        <input id="cf_util" type="number" step="0.01" placeholder="z. B. 600">
+        <label>Nebenkosten (ihr zahlt) / Monat (€)</label>
+        <input id="cf_util" type="number" step="0.01" placeholder="z. B. 280">
       </div>
 
       <div class="f sm6">
@@ -124,22 +145,13 @@
           <span class="tiny" id="saveMsg"></span>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="card">
-    <h2>Gesamtbilanz (ausgewähltes Jahr)</h2>
-    <div class="kpis">
-      <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Zinsen (Jahr)</div><div class="v" id="tot_interest">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Tilgung (Jahr)</div><div class="v" id="tot_principal">–</div></div>
-      <div class="kpi"><div class="t">Gesamt eff. Tilgung (Jahr)</div><div class="v" id="tot_efftilg">–</div></div>
-    </div>
-    <div class="kpis" style="margin-top:10px">
-      <div class="kpi"><div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="tot_cf_year">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Cashflow (Monat Ø)</div><div class="v" id="tot_cf_month">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Warmmiete (Monat)</div><div class="v" id="tot_warm_month">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Rate (Monat)</div><div class="v" id="tot_rate_month">–</div></div>
+      <div class="f">
+        <div class="hint">
+          Tipp: Nach „Einheiten“ bitte <b>Felder erstellen</b> drücken, dann Warmmieten eintragen.
+          Share-Link teilt immer die <b>aktuellen</b> gespeicherten Objekte.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -147,21 +159,14 @@
 
 <script>
 (() => {
-  // Fester Key (Daten bleiben nach Reload)
-  const STORAGE_KEY = "tunjay_holding_properties";
-
-  // alte Keys (Migration, falls du vorherige Versionen hattest)
-  const LEGACY_KEYS = [
-    "tunjay_cf_units_v2_edit",
-    "tunjay_objects_edit_v1",
-    "tunjay_cf_units_v2",
-    "tunjay_cf_units",
-    "tunjay_cf"
-  ];
+  // === STORAGE ===
+  const STORAGE_KEY = "tuncay_holding_objects_v1";
 
   const el = (id) => document.getElementById(id);
-  const fmtEur = (n) => new Intl.NumberFormat("de-DE", {style:"currency", currency:"EUR"}).format(isFinite(n)?n:0);
+  const fmtEur = (n) => new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(isFinite(n)?n:0);
   const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+  function cashClass(v){ return v >= 0 ? "pos" : "neg"; }
 
   function parseYearMonth(s){
     const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
@@ -177,41 +182,22 @@
     return {y,m};
   }
 
-  function safeParse(key){
-    try{
-      const raw = localStorage.getItem(key);
-      if(!raw) return null;
-      const data = JSON.parse(raw);
-      return Array.isArray(data) ? data : null;
-    }catch{ return null; }
-  }
-
-  // Normalisierung: stellt sicher, dass alle Felder vorhanden sind
   function normalize(p){
     const id = p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
-    const name = p.name || p.objektname || "Unbenannt";
-    const units = Math.max(1, Math.floor(+p.units || +p.einheiten || 1));
+    const name = (p.name||"").trim() || "Unbenannt";
+    const units = Math.max(1, Math.floor(+p.units || 1));
 
     const loan = p.loan || {};
-    const startYm = loan.startYm || p.startYm || p.start || p.darlehenStart || "";
-    const principal = +loan.principal || +p.principal || +p.startschuld || 0;
-    const interestPa = +loan.interestPa || +p.interestPa || +p.zins || 0;
-    const paymentMonthly = +loan.paymentMonthly || +p.paymentMonthly || +p.rate || 0;
+    const startYm = (loan.startYm || p.startYm || "").trim();
+    const principal = +loan.principal || 0;
+    const interestPa = +loan.interestPa || 0;
+    const paymentMonthly = +loan.paymentMonthly || 0;
 
-    const utilitiesMonthly = +p.utilitiesMonthly || +p.nebenkosten || 0;
-
-    let unitRents = p.unitRents;
-    if(!Array.isArray(unitRents)) unitRents = [];
-    // falls früher warmmiete gesamt gespeichert wurde:
-    const warmTotal = +p.warmRentTotal || +p.warmmiete || +p.kaltmiete || 0;
-    if(unitRents.length === 0 && warmTotal > 0){
-      // verteile grob gleichmäßig
-      const per = warmTotal / units;
-      unitRents = Array.from({length: units}, (_,i)=> round2(per));
-    }
-    // auf Anzahl Einheiten trimmen/auffüllen
+    let unitRents = Array.isArray(p.unitRents) ? p.unitRents.map(x=>+x||0) : [];
     unitRents = unitRents.slice(0, units);
     while(unitRents.length < units) unitRents.push(0);
+
+    const utilitiesMonthly = +p.utilitiesMonthly || 0;
 
     return {
       id, name, units,
@@ -221,39 +207,43 @@
         startYm,
         principal: isFinite(principal)?principal:0,
         interestPa: isFinite(interestPa)?interestPa:0,
-        paymentMonthly: isFinite(paymentMonthly)?paymentMonthly:0,
-        extras: Array.isArray(loan.extras) ? loan.extras : []
+        paymentMonthly: isFinite(paymentMonthly)?paymentMonthly:0
       }
     };
   }
 
-  function loadWithMigration(){
-    // 1) aktueller key
-    const cur = safeParse(STORAGE_KEY);
-    if(cur && cur.length){
-      return cur.map(normalize);
-    }
-    // 2) Migration: ersten Legacy-Key finden, der Daten hat
-    for(const k of LEGACY_KEYS){
-      const d = safeParse(k);
-      if(d && d.length){
-        const norm = d.map(normalize);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(norm));
-        return norm;
-      }
-    }
-    return [];
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      const data = JSON.parse(raw);
+      if(!Array.isArray(data)) return [];
+      return data.map(normalize);
+    }catch{ return []; }
+  }
+  function persist(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
   }
 
-  let props = loadWithMigration();
-  function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(props)); }
+  // === SHARE-LINK ENCODE/DECODE ===
+  // UTF-8 safe base64 in hash (#data=...)
+  function encodeToUrlData(obj){
+    const json = JSON.stringify(obj);
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    return encodeURIComponent(b64);
+  }
+  function decodeFromUrlData(s){
+    const b64 = decodeURIComponent(s);
+    const json = decodeURIComponent(escape(atob(b64)));
+    return JSON.parse(json);
+  }
 
-  el("loadedInfo").textContent = `Geladen: ${props.length} Objekt(e)`;
-
+  // === APP STATE ===
+  let props = load();
   let selectedYear = new Date().getFullYear();
-
-  // Edit Mode
   let editingId = null;
+
+  // === UI HELPERS ===
   function setEditMode(on){
     el("editPill").style.display = on ? "inline-block" : "none";
     el("cancelEdit").style.display = on ? "inline-block" : "none";
@@ -273,7 +263,6 @@
     setEditMode(false);
   }
 
-  // Unit fields
   function readUnitRents(){
     return [...el("unitRents").querySelectorAll("input[data-unit]")].map(i => +i.value || 0);
   }
@@ -291,35 +280,34 @@
       wrap.appendChild(d);
     }
   }
+
   el("buildUnits").onclick=(e)=>{
     e.preventDefault();
     const units = +el("p_units").value;
     buildUnitRentFields(units, readUnitRents());
   };
 
-  function cashClass(v){ return v >= 0 ? "pos" : "neg"; }
-
-  // Jahresberechnung (Annuität, Zinsen, Tilgung, Restschuld)
+  // === CALC ===
   function calcYear(p, year){
     const start = parseYearMonth(p.loan.startYm);
     if(!start) return null;
 
     const iMonthly = (p.loan.interestPa/100)/12;
-    const payment = p.loan.paymentMonthly;
+    const payment = +p.loan.paymentMonthly || 0;
 
     const startIdx = monthIndex(start.y, start.m);
     const endIdx = monthIndex(year, 12);
 
-    let balance = p.loan.principal;
-
-    let interestPaid=0, principalPaid=0, months=0;
+    let balance = +p.loan.principal || 0;
+    let interestPaid=0, principalPaid=0;
 
     for(let idx=startIdx; idx<=endIdx; idx++){
-      if(balance <= 0){ balance = 0; break; }
+      if(balance <= 0 || payment <= 0) { balance = Math.max(0,balance); break; }
 
       const interest = balance * iMonthly;
       let rate = payment;
 
+      // bei letzter Rate nicht überzahlen
       const need = balance + interest;
       if(rate > need) rate = need;
 
@@ -328,46 +316,45 @@
 
       const ym = fromMonthIndex(idx);
       if(ym.y === year){
-        months++;
         interestPaid += interest;
         principalPaid += prin;
       }
     }
 
-    const warmMonth = (p.unitRents || []).reduce((s,x)=> s + (+x||0), 0);
-    const utilMonth = (+p.utilitiesMonthly||0);
+    const warmMonth = (p.unitRents||[]).reduce((s,x)=>s+(+x||0),0);
+    const utilMonth = +p.utilitiesMonthly||0;
     const cfMonth = warmMonth - utilMonth - payment;
 
     return {
       balanceEnd: round2(balance),
       interestPaid: round2(interestPaid),
       principalPaid: round2(principalPaid),
-      effTilg: round2(principalPaid),
-      cfYear: round2(cfMonth * 12),
       cfMonth: round2(cfMonth),
+      cfYear: round2(cfMonth * 12),
       warmMonth: round2(warmMonth),
+      utilMonth: round2(utilMonth),
       rateMonth: round2(payment)
     };
   }
 
   function renderTotals(){
-    let totBal=0, totInt=0, totPrin=0, totEff=0, totCfYear=0, totWarmMonth=0, totRateMonth=0;
+    let totBal=0, totInt=0, totPrin=0, totCfYear=0, totWarm=0, totUtil=0, totRate=0;
+
     props.forEach(p=>{
       const y = calcYear(p, selectedYear);
       if(!y) return;
       totBal += y.balanceEnd;
       totInt += y.interestPaid;
       totPrin += y.principalPaid;
-      totEff += y.effTilg;
       totCfYear += y.cfYear;
-      totWarmMonth += y.warmMonth;
-      totRateMonth += y.rateMonth;
+      totWarm += y.warmMonth;
+      totUtil += y.utilMonth;
+      totRate += y.rateMonth;
     });
 
     el("tot_balance").textContent = fmtEur(round2(totBal));
     el("tot_interest").textContent = fmtEur(round2(totInt));
     el("tot_principal").textContent = fmtEur(round2(totPrin));
-    el("tot_efftilg").textContent = fmtEur(round2(totEff));
 
     const cfYearEl = el("tot_cf_year");
     cfYearEl.textContent = fmtEur(round2(totCfYear));
@@ -378,47 +365,62 @@
     cfMonthEl.textContent = fmtEur(round2(cfMonth));
     cfMonthEl.className = "v " + cashClass(cfMonth);
 
-    el("tot_warm_month").textContent = fmtEur(round2(totWarmMonth));
-    el("tot_rate_month").textContent = fmtEur(round2(totRateMonth));
+    el("tot_warm_month").textContent = fmtEur(round2(totWarm));
+    el("tot_util_month").textContent = fmtEur(round2(totUtil));
+    el("tot_rate_month").textContent = fmtEur(round2(totRate));
   }
 
-  function render(){
-    el("yearLabel").textContent = selectedYear;
-    el("loadedInfo").textContent = `Gespeichert: ${props.length} Objekt(e) (bleibt nach Reload)`;
-    renderTotals();
-
+  function renderList(){
     const list = el("list");
     list.innerHTML = "";
 
+    if(!props.length){
+      const c = document.createElement("div");
+      c.className = "card";
+      c.innerHTML = `<div class="tiny">Noch keine Objekte gespeichert.</div>`;
+      list.appendChild(c);
+      return;
+    }
+
     props.forEach(p=>{
       const y = calcYear(p, selectedYear);
-      const cf = y ? y.cfMonth : 0;
+      const cfM = y ? y.cfMonth : 0;
 
       const det = document.createElement("details");
       const sum = document.createElement("summary");
-
       sum.innerHTML = `
         <div class="row" style="width:100%">
           <div>
             <div style="font-weight:800">${p.name}</div>
             <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat</div>
           </div>
-          <div class="pill">Cashflow: <b class="${cashClass(cf)}">${fmtEur(cf)}/Monat</b></div>
+          <div class="pill">Cashflow: <b class="${cashClass(cfM)}">${fmtEur(cfM)}/Monat</b></div>
         </div>
       `;
 
       const inner = document.createElement("div");
       inner.className = "inner";
+
       inner.innerHTML = `
         <div class="kpis" style="margin-top:12px">
+          <div class="kpi"><div class="t">Restschuld (Jahresende)</div><div class="v">${fmtEur(y?.balanceEnd||0)}</div></div>
           <div class="kpi"><div class="t">Warmmiete (Monat)</div><div class="v">${fmtEur(y?.warmMonth||0)}</div></div>
-          <div class="kpi"><div class="t">Cashflow (Monat)</div><div class="v ${cashClass(cf)}">${fmtEur(cf)}</div></div>
+          <div class="kpi"><div class="t">Nebenkosten (Monat)</div><div class="v">${fmtEur(y?.utilMonth||0)}</div></div>
+          <div class="kpi"><div class="t">Cashflow (Jahr)</div><div class="v ${cashClass(y?.cfYear||0)}">${fmtEur(y?.cfYear||0)}</div></div>
+        </div>
+
+        <div class="kpis" style="margin-top:10px">
           <div class="kpi"><div class="t">Zinsen (Jahr)</div><div class="v">${fmtEur(y?.interestPaid||0)}</div></div>
           <div class="kpi"><div class="t">Tilgung (Jahr)</div><div class="v">${fmtEur(y?.principalPaid||0)}</div></div>
+          <div class="kpi"><div class="t">Cashflow (Monat)</div><div class="v ${cashClass(cfM)}">${fmtEur(cfM)}</div></div>
+          <div class="kpi"><div class="t">Rate (Monat)</div><div class="v">${fmtEur(y?.rateMonth||0)}</div></div>
         </div>
+
         <div class="hr"></div>
-        <div class="tiny">Warmmieten: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}</div>
-        <div class="tiny">Nebenkosten: ${fmtEur(+p.utilitiesMonthly||0)}/Monat</div>
+        <div class="tiny">
+          Warmmieten je Einheit: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}
+        </div>
+
         <div class="hr"></div>
         <div class="row">
           <button class="btn" data-edit="${p.id}">Bearbeiten</button>
@@ -450,25 +452,32 @@
         const p=props.find(x=>x.id===id);
         if(!p) return;
 
-        editingId=id;
+        editingId = id;
         setEditMode(true);
 
-        el("p_name").value=p.name||"";
-        el("p_units").value=p.units||"";
-        el("l_start").value=p.loan.startYm||"";
-        el("l_principal").value=p.loan.principal ?? "";
-        el("l_interest").value=p.loan.interestPa ?? "";
-        el("l_payment").value=p.loan.paymentMonthly ?? "";
-        el("cf_util").value=p.utilitiesMonthly ?? "";
+        el("p_name").value = p.name || "";
+        el("p_units").value = p.units || "";
+        el("l_start").value = p.loan.startYm || "";
+        el("l_principal").value = p.loan.principal ?? "";
+        el("l_interest").value = p.loan.interestPa ?? "";
+        el("l_payment").value = p.loan.paymentMonthly ?? "";
+        el("cf_util").value = p.utilitiesMonthly ?? "";
 
         buildUnitRentFields(p.units, p.unitRents||[]);
-        el("saveMsg").textContent="Bearbeitung geladen. Ändern → speichern.";
+        el("saveMsg").textContent = "Bearbeitung geladen. Ändern → speichern.";
         window.scrollTo({top:0, behavior:"smooth"});
       };
     });
   }
 
-  // Save / Update
+  function render(){
+    el("yearLabel").textContent = selectedYear;
+    el("loadedInfo").textContent = `Gespeichert: ${props.length} Objekt(e) (bleibt nach Reload)`;
+    renderTotals();
+    renderList();
+  }
+
+  // === SAVE / UPDATE ===
   el("saveProperty").onclick=(e)=>{
     e.preventDefault();
 
@@ -489,10 +498,10 @@
     if(!parseYearMonth(startYm)) errors.push("Startdatum muss YYYY-MM sein");
     if(!isFinite(principal) || principal<=0) errors.push("Startschuld ungültig");
     if(!isFinite(paymentMonthly) || paymentMonthly<=0) errors.push("Rate ungültig");
-    if(rentInputs.length!==units) errors.push("Bitte Felder erstellen/aktualisieren");
+    if(rentInputs.length!==units) errors.push("Bitte Felder erstellen/aktualisieren (Warmmieten)");
 
     if(errors.length){
-      el("saveMsg").textContent="❌ " + errors.join(" · ");
+      el("saveMsg").textContent = "❌ " + errors.join(" · ");
       return;
     }
 
@@ -500,7 +509,7 @@
       id: editingId || undefined,
       name, units, unitRents,
       utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
-      loan: { startYm, principal, interestPa, paymentMonthly, extras: [] }
+      loan: { startYm, principal, interestPa, paymentMonthly }
     });
 
     if(editingId){
@@ -517,10 +526,13 @@
 
   el("cancelEdit").onclick=(e)=>{ e.preventDefault(); clearForm(); render(); };
 
+  // === YEAR NAV ===
   el("prevYear").onclick=()=>{ selectedYear--; render(); };
   el("nextYear").onclick=()=>{ selectedYear++; render(); };
 
+  // === EXPORT/IMPORT ===
   el("exportBtn").onclick=()=>{ prompt("Kopieren:", JSON.stringify(props,null,2)); };
+
   el("importBtn").onclick=()=>{
     const raw=prompt("JSON einfügen:");
     if(!raw) return;
@@ -531,9 +543,12 @@
       persist();
       clearForm();
       render();
-      alert("Import ok");
-    }catch(err){ alert("Import Fehler: "+(err.message||err)); }
+      alert("✅ Import ok");
+    }catch(err){
+      alert("Import Fehler: " + (err.message || err));
+    }
   };
+
   el("resetBtn").onclick=()=>{
     if(!confirm("Alles löschen?")) return;
     props=[];
@@ -542,6 +557,59 @@
     render();
   };
 
+  // === SHARE-LINK BUTTON ===
+  el("shareBtn").onclick = async () => {
+    try{
+      const data = encodeToUrlData(props);
+      const base = location.origin + location.pathname;
+      const url = base + "#data=" + data;
+
+      // iOS/Android: nativer Teilen-Dialog (WhatsApp etc.)
+      if (navigator.share) {
+        await navigator.share({ title: "Tuncay Holding", text: "Immobilien-Daten", url });
+        return;
+      }
+
+      // Fallback: Clipboard oder Prompt
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        alert("✅ Link kopiert. Jetzt in WhatsApp einfügen.");
+      } else {
+        prompt("Link kopieren:", url);
+      }
+    }catch(err){
+      alert("Share-Link Fehler: " + (err.message || err));
+    }
+  };
+
+  // === AUTO-IMPORT FROM LINK (#data=...) ===
+  (function importFromHashIfAny(){
+    try{
+      const h = location.hash || "";
+      if(!h.startsWith("#data=")) return;
+
+      const dataPart = h.slice("#data=".length);
+      const incoming = decodeFromUrlData(dataPart);
+
+      if(!Array.isArray(incoming)) return;
+
+      const ok = confirm("Link enthält Daten. Importieren? (überschreibt deine aktuellen Daten)");
+      if(!ok) return;
+
+      props = incoming.map(normalize);
+      persist();
+      clearForm();
+      render();
+
+      // Hash entfernen (damit es nicht jedes Mal fragt)
+      history.replaceState(null, "", location.pathname + location.search);
+      alert("✅ Import abgeschlossen.");
+    }catch(err){
+      alert("Import aus Link fehlgeschlagen: " + (err.message || err));
+    }
+  })();
+
+  // init
   setEditMode(false);
   render();
 })();
