@@ -17,6 +17,7 @@
     .right{margin-left:auto}
     .btn{border:1px solid var(--line);background:var(--btn);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
     .btn.primary{background:var(--btnP);border-color:#2c4a86}
+    .btn.danger{background:#3a1520;border-color:#6b2a3c}
     .btn:hover{border-color:#3a4b73}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
     .f{grid-column:span 12}
@@ -40,15 +41,14 @@
     .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
     .tiny{font-size:12px;color:var(--muted)}
     .hr{height:1px;background:var(--line);margin:12px 0}
+    .badgeEdit{display:inline-block;margin-left:8px;font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid #2c4a86;color:#cfe1ff;background:rgba(23,48,94,.35)}
   </style>
 </head>
 
 <body>
   <div class="card">
     <h1>Tunjay Holding</h1>
-    <div class="sub">
-      Version: <b>CF+Totals+Units</b> · Warmmieten pro Einheit (monatlich) · Nebenkosten (monatlich) · Rate (monatlich) · Jahr-Navigation
-    </div>
+    <div class="sub">Version: <b>EDIT</b> · Objekte speichern & bearbeiten</div>
 
     <div class="row">
       <button class="btn" id="prevYear">◀ Jahr</button>
@@ -58,91 +58,66 @@
       <div class="right row">
         <button class="btn" id="exportBtn">Export</button>
         <button class="btn" id="importBtn">Import</button>
-        <button class="btn" id="resetBtn">Reset</button>
+        <button class="btn danger" id="resetBtn">Reset</button>
       </div>
-    </div>
-    <div class="tiny" style="margin-top:8px">
-      Cashflow/Liquidität = Warmmiete − Nebenkosten (die ihr zahlt) − Rate. (Weitere Kosten bauen wir als nächstes optional dazu.)
     </div>
   </div>
 
   <div class="card">
-    <h2 style="margin:0 0 10px;font-size:16px">Neues Objekt anlegen (Kopfkarte)</h2>
+    <div class="row">
+      <h2 style="margin:0;font-size:16px">Objekt (Kopfkarte)</h2>
+      <span class="badgeEdit" id="editBadge" style="display:none">Bearbeitungsmodus aktiv</span>
+    </div>
 
-    <div class="grid">
+    <div class="grid" style="margin-top:10px">
       <div class="f sm6">
         <label>Objektname</label>
-        <input id="p_name" placeholder="z. B. MFH Lindenstraße 12">
+        <input id="p_name">
       </div>
       <div class="f sm3">
         <label>Einheiten</label>
-        <input id="p_units" type="number" min="1" step="1" placeholder="z. B. 6">
+        <input id="p_units" type="number" min="1" step="1">
       </div>
       <div class="f sm3">
         <label>Start Darlehen (YYYY-MM)</label>
-        <input id="l_start" placeholder="z. B. 2024-01">
+        <input id="l_start" placeholder="2024-01">
       </div>
 
       <div class="f sm4">
         <label>Startschuld (€)</label>
-        <input id="l_principal" type="number" step="0.01" placeholder="z. B. 320000">
+        <input id="l_principal" type="number" step="0.01">
       </div>
       <div class="f sm4">
         <label>Zins p.a. (%)</label>
-        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 3.25">
+        <input id="l_interest" type="number" step="0.0001">
       </div>
       <div class="f sm4">
-        <label>Annuität / Rate pro Monat (€)</label>
-        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 1450">
+        <label>Rate / Monat (€)</label>
+        <input id="l_payment" type="number" step="0.01">
       </div>
 
       <div class="f sm6">
-        <label>Nebenkosten (ihr zahlt) pro Monat (€)</label>
-        <input id="cf_util" type="number" step="0.01" placeholder="z. B. 600">
+        <label>Nebenkosten (ihr zahlt) / Monat (€)</label>
+        <input id="cf_util" type="number" step="0.01">
       </div>
 
       <div class="f sm6">
         <label>Warmmieten pro Einheit (monatlich)</label>
         <div id="unitRents"></div>
         <div class="row" style="margin-top:8px">
-          <button class="btn" id="buildUnits">Felder erstellen</button>
-          <span class="tiny">Trage pro Einheit die Warmmiete/Monat ein.</span>
+          <button class="btn" id="buildUnits">Felder erstellen / aktualisieren</button>
+          <span class="tiny">Pro Einheit eine Warmmiete.</span>
         </div>
-      </div>
-
-      <div class="f sm6">
-        <label>Sondertilgung (jährlich, optional)</label>
-        <div class="row">
-          <input id="ex_year" type="number" placeholder="Jahr z.B. 2026" style="max-width:180px">
-          <input id="ex_amount" type="number" step="0.01" placeholder="Betrag € z.B. 5000" style="max-width:240px">
-          <button class="btn" id="addExtra">+ hinzufügen</button>
-        </div>
-        <div class="tiny" id="extrasList" style="margin-top:6px"></div>
       </div>
 
       <div class="f sm6">
         <label>&nbsp;</label>
         <div class="row">
           <button class="btn primary" id="saveProperty">Objekt speichern ✅</button>
+          <button class="btn" id="cancelEdit" style="display:none">Bearbeitung abbrechen</button>
           <span class="tiny" id="saveMsg"></span>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2 style="margin:0 0 10px;font-size:16px">Gesamt (ausgewähltes Jahr)</h2>
-    <div class="kpis">
-      <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Tilgung effektiv (Jahr)</div><div class="v" id="tot_tilg_year">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Tilgung effektiv (Monat Ø)</div><div class="v" id="tot_tilg_month">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="tot_cf_year">–</div></div>
-    </div>
-    <div class="kpis" style="margin-top:10px">
-      <div class="kpi"><div class="t">Gesamt Cashflow (Monat Ø)</div><div class="v" id="tot_cf_month">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Warmmiete (Monat)</div><div class="v" id="tot_warm_month">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Nebenkosten (Monat)</div><div class="v" id="tot_util_month">–</div></div>
-      <div class="kpi"><div class="t">Gesamt Rate (Monat)</div><div class="v" id="tot_rate_month">–</div></div>
     </div>
   </div>
 
@@ -150,11 +125,9 @@
 
 <script>
 (() => {
-  const STORAGE_KEY = "tunjay_cf_units_v1";
+  const STORAGE_KEY = "tunjay_objects_edit_v1";
   const el = (id) => document.getElementById(id);
-
   const fmtEur = (n) => new Intl.NumberFormat("de-DE", {style:"currency", currency:"EUR"}).format(isFinite(n)?n:0);
-  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
   function parseYearMonth(s){
     const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
@@ -163,325 +136,198 @@
     if(mo<1 || mo>12) return null;
     return {y, m: mo};
   }
-  function monthIndex(y,m){ return y*12 + (m-1); }
-  function fromMonthIndex(idx){
-    const y = Math.floor(idx/12);
-    const m = (idx % 12) + 1;
-    return {y,m};
-  }
 
-  function load(){
-    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-    catch{ return []; }
-  }
-  function save(props){ localStorage.setItem(STORAGE_KEY, JSON.stringify(props)); }
+  function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
+  function save(v){ localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); }
 
   let props = load();
   let selectedYear = new Date().getFullYear();
 
-  // --- Unit rent fields
+  // EDIT MODE
+  let editingId = null;
+  function setEditMode(on){
+    el("editBadge").style.display = on ? "inline-block" : "none";
+    el("cancelEdit").style.display = on ? "inline-block" : "none";
+    el("saveProperty").textContent = on ? "Änderungen speichern ✅" : "Objekt speichern ✅";
+  }
+  function clearForm(){
+    el("p_name").value="";
+    el("p_units").value="";
+    el("l_start").value="";
+    el("l_principal").value="";
+    el("l_interest").value="";
+    el("l_payment").value="";
+    el("cf_util").value="";
+    el("unitRents").innerHTML="";
+    el("saveMsg").textContent="";
+    editingId=null;
+    setEditMode(false);
+  }
+
+  function readUnitRents(){
+    return [...el("unitRents").querySelectorAll("input[data-unit]")].map(i => +i.value || 0);
+  }
   function buildUnitRentFields(units, existing=[]){
     const wrap = el("unitRents");
-    wrap.innerHTML = "";
+    wrap.innerHTML="";
     const n = Math.max(0, Math.floor(units||0));
     for(let i=0;i<n;i++){
-      const d = document.createElement("div");
-      d.style.marginBottom = "8px";
-      d.innerHTML = `
+      const d=document.createElement("div");
+      d.style.marginBottom="8px";
+      d.innerHTML=`
         <label class="tiny">Einheit ${i+1} – Warmmiete/Monat (€)</label>
-        <input type="number" step="0.01" data-unit="${i}" placeholder="z. B. 650" value="${existing[i] ?? ""}">
+        <input type="number" step="0.01" data-unit="${i}" value="${existing[i] ?? ""}">
       `;
       wrap.appendChild(d);
     }
   }
 
-  el("buildUnits").addEventListener("click", (e)=>{
+  el("buildUnits").onclick = (e)=>{
     e.preventDefault();
     const units = +el("p_units").value;
-    buildUnitRentFields(units);
-  });
+    buildUnitRentFields(units, readUnitRents());
+  };
 
-  // --- Extras (yearly)
-  let extrasDraft = []; // {year, amount}
-  function renderExtrasDraft(){
-    el("extrasList").textContent = extrasDraft.length
-      ? ("Sondertilgungen: " + extrasDraft.map(x => `${x.year}: ${fmtEur(x.amount)}`).join(" · "))
-      : "Sondertilgungen: keine";
+  function cashflowMonth(p){
+    const warm = (p.unitRents||[]).reduce((s,x)=>s+(+x||0),0);
+    const util = +p.utilitiesMonthly||0;
+    const rate = +p.loan.paymentMonthly||0;
+    return warm - util - rate;
   }
-  el("addExtra").addEventListener("click", (e)=>{
-    e.preventDefault();
-    const y = +el("ex_year").value;
-    const a = +el("ex_amount").value;
-    if(!isFinite(y) || y<1900 || y>3000 || !isFinite(a) || a<=0) return;
-    extrasDraft.push({year:y, amount:a});
-    el("ex_year").value = "";
-    el("ex_amount").value = "";
-    renderExtrasDraft();
-  });
-  renderExtrasDraft();
-
-  // --- Core calc year
-  function calcYear(p, year){
-    const start = parseYearMonth(p.loan.startYm);
-    if(!start) return null;
-
-    const iMonthly = (p.loan.interestPa/100)/12;
-    const payment = p.loan.paymentMonthly;
-
-    const startIdx = monthIndex(start.y, start.m);
-    const endIdx = monthIndex(year, 12);
-
-    let balance = p.loan.principal;
-
-    let interestPaid=0, principalPaid=0, extraPaid=0, months=0;
-
-    // extras: only year-based, applied in Dezember of that year
-    const extraDecMap = new Map();
-    for(const ex of (p.loan.extras||[])){
-      const idx = monthIndex(ex.year, 12);
-      extraDecMap.set(idx, (extraDecMap.get(idx)||0) + ex.amount);
-    }
-
-    for(let idx=startIdx; idx<=endIdx; idx++){
-      if(balance <= 0){ balance = 0; break; }
-
-      const interest = balance * iMonthly;
-      let rate = payment;
-
-      // cap last rate
-      const need = balance + interest;
-      if(rate > need) rate = need;
-
-      const prin = Math.max(0, rate - interest);
-
-      let extra = extraDecMap.get(idx) || 0;
-      if(extra > (balance - prin)) extra = Math.max(0, balance - prin);
-
-      balance = balance - prin - extra;
-
-      const ym = fromMonthIndex(idx);
-      if(ym.y === year){
-        months++;
-        interestPaid += interest;
-        principalPaid += prin;
-        extraPaid += extra;
-      }
-    }
-
-    // Cashflow model (monthly)
-    const warmMonth = (p.unitRents || []).reduce((s,x)=> s + (+x||0), 0);
-    const utilMonth = (+p.utilitiesMonthly||0);
-    const cfMonth = warmMonth - utilMonth - payment;
-
-    return {
-      year,
-      balanceEnd: round2(balance),
-      interestPaid: round2(interestPaid),
-      principalPaid: round2(principalPaid),
-      extraPaid: round2(extraPaid),
-      effTilg: round2(principalPaid + extraPaid),
-      cfYear: round2(cfMonth * 12),
-      cfMonth: round2(cfMonth),
-      warmMonth: round2(warmMonth),
-      utilMonth: round2(utilMonth),
-      rateMonth: round2(payment),
-      monthsActive: months
-    };
-  }
-
-  function cashClass(v){ return v >= 0 ? "pos" : "neg"; }
 
   function render(){
     el("yearLabel").textContent = selectedYear;
-
-    let tot = {
-      balance:0, effTilgYear:0, cfYear:0,
-      warmMonth:0, utilMonth:0, rateMonth:0
-    };
-
     const list = el("list");
-    list.innerHTML = "";
+    list.innerHTML="";
 
     props.forEach(p=>{
-      const y = calcYear(p, selectedYear);
-      if(!y) return;
-
-      tot.balance += y.balanceEnd;
-      tot.effTilgYear += y.effTilg;
-      tot.cfYear += y.cfYear;
-      tot.warmMonth += y.warmMonth;
-      tot.utilMonth += y.utilMonth;
-      tot.rateMonth += y.rateMonth;
-
-      const det = document.createElement("details");
-      const sum = document.createElement("summary");
-
-      sum.innerHTML = `
-        <div class="row" style="width:100%">
-          <div>
-            <div style="font-weight:800">${p.name}</div>
-            <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Zins ${p.loan.interestPa}% · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat</div>
-          </div>
-          <div style="text-align:right">
-            <div class="pill">Cashflow: <b class="${cashClass(y.cfMonth)}">${fmtEur(y.cfMonth)}/Monat</b></div>
-            <div class="pill" style="margin-left:6px">Rest: <b>${fmtEur(y.balanceEnd)}</b></div>
+      const cf = cashflowMonth(p);
+      const det=document.createElement("details");
+      det.innerHTML=`
+        <summary>
+          <div style="font-weight:800">${p.name}</div>
+          <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat · Cashflow ${fmtEur(cf)}/Monat</div>
+        </summary>
+        <div class="inner">
+          <div class="hr"></div>
+          <div class="row">
+            <button class="btn" data-edit="${p.id}">Bearbeiten</button>
+            <button class="btn danger" data-del="${p.id}">Objekt löschen</button>
           </div>
         </div>
       `;
-
-      const inner = document.createElement("div");
-      inner.className = "inner";
-      inner.innerHTML = `
-        <div class="kpis" style="margin-top:12px">
-          <div class="kpi"><div class="t">Warmmiete (Monat)</div><div class="v">${fmtEur(y.warmMonth)}</div></div>
-          <div class="kpi"><div class="t">Nebenkosten (Monat)</div><div class="v">${fmtEur(y.utilMonth)}</div></div>
-          <div class="kpi"><div class="t">Cashflow (Monat)</div><div class="v ${cashClass(y.cfMonth)}">${fmtEur(y.cfMonth)}</div></div>
-          <div class="kpi"><div class="t">Cashflow (Jahr)</div><div class="v ${cashClass(y.cfYear)}">${fmtEur(y.cfYear)}</div></div>
-        </div>
-
-        <div class="kpis" style="margin-top:10px">
-          <div class="kpi"><div class="t">Zinsen (Jahr)</div><div class="v">${fmtEur(y.interestPaid)}</div></div>
-          <div class="kpi"><div class="t">Tilgung (Jahr)</div><div class="v">${fmtEur(y.principalPaid)}</div></div>
-          <div class="kpi"><div class="t">Sondertilgung (Jahr)</div><div class="v">${fmtEur(y.extraPaid)}</div></div>
-          <div class="kpi"><div class="t">Eff. Tilgung (Jahr)</div><div class="v">${fmtEur(y.effTilg)}</div></div>
-        </div>
-
-        <div class="hr"></div>
-        <div class="tiny">Warmmieten je Einheit: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}</div>
-        <div class="tiny">Sondertilgungen: ${(p.loan.extras||[]).length ? p.loan.extras.map(x=>`${x.year}: ${fmtEur(x.amount)}`).join(" · ") : "keine"}</div>
-
-        <div class="hr"></div>
-        <div class="row">
-          <button class="btn" data-del="${p.id}">Objekt löschen</button>
-        </div>
-      `;
-
-      det.appendChild(sum);
-      det.appendChild(inner);
       list.appendChild(det);
     });
 
-    // totals
-    const totTilgMonth = tot.effTilgYear / 12;
-    const totCfMonth = tot.cfYear / 12;
-
-    el("tot_balance").textContent = fmtEur(round2(tot.balance));
-    el("tot_tilg_year").textContent = fmtEur(round2(tot.effTilgYear));
-    el("tot_tilg_month").textContent = fmtEur(round2(totTilgMonth));
-
-    const cfYearEl = el("tot_cf_year");
-    cfYearEl.textContent = fmtEur(round2(tot.cfYear));
-    cfYearEl.className = "v " + cashClass(tot.cfYear);
-
-    const cfMonthEl = el("tot_cf_month");
-    cfMonthEl.textContent = fmtEur(round2(totCfMonth));
-    cfMonthEl.className = "v " + cashClass(totCfMonth);
-
-    el("tot_warm_month").textContent = fmtEur(round2(tot.warmMonth));
-    el("tot_util_month").textContent = fmtEur(round2(tot.utilMonth));
-    el("tot_rate_month").textContent = fmtEur(round2(tot.rateMonth));
-
-    // bind delete
+    // delete
     [...document.querySelectorAll("[data-del]")].forEach(b=>{
-      b.onclick = () => {
-        const id = b.getAttribute("data-del");
-        props = props.filter(x=>x.id!==id);
+      b.onclick=()=>{
+        const id=b.getAttribute("data-del");
+        props=props.filter(x=>x.id!==id);
         save(props);
+        if(editingId===id) clearForm();
         render();
+      };
+    });
+
+    // edit
+    [...document.querySelectorAll("[data-edit]")].forEach(b=>{
+      b.onclick=()=>{
+        const id=b.getAttribute("data-edit");
+        const p=props.find(x=>x.id===id);
+        if(!p) return;
+
+        editingId=id;
+        setEditMode(true);
+
+        el("p_name").value=p.name||"";
+        el("p_units").value=p.units||"";
+        el("l_start").value=p.loan.startYm||"";
+        el("l_principal").value=p.loan.principal ?? "";
+        el("l_interest").value=p.loan.interestPa ?? "";
+        el("l_payment").value=p.loan.paymentMonthly ?? "";
+        el("cf_util").value=p.utilitiesMonthly ?? "";
+
+        buildUnitRentFields(p.units, p.unitRents||[]);
+        el("saveMsg").textContent="Bearbeitung geladen. Ändern → speichern.";
+        window.scrollTo({top:0, behavior:"smooth"});
       };
     });
   }
 
-  // Save property
-  el("saveProperty").addEventListener("click", (e)=>{
+  el("saveProperty").onclick=(e)=>{
     e.preventDefault();
-    const msg = el("saveMsg");
-    msg.textContent = "";
 
-    const name = (el("p_name").value || "").trim();
-    const units = Math.max(0, Math.floor(+el("p_units").value));
-    const startYm = (el("l_start").value || "").trim();
+    const name=(el("p_name").value||"").trim();
+    const units=Math.max(0, Math.floor(+el("p_units").value));
+    const startYm=(el("l_start").value||"").trim();
 
-    const principal = +el("l_principal").value;
-    const interestPa = +el("l_interest").value;
-    const paymentMonthly = +el("l_payment").value;
+    const principal=+el("l_principal").value;
+    const interestPa=+el("l_interest").value;
+    const paymentMonthly=+el("l_payment").value;
+    const utilitiesMonthly=+el("cf_util").value;
 
-    const utilitiesMonthly = +el("cf_util").value;
+    const rentInputs=[...el("unitRents").querySelectorAll("input[data-unit]")];
+    const unitRents=rentInputs.map(i=>+i.value||0);
 
-    // read unit rents from generated fields
-    const rentInputs = [...el("unitRents").querySelectorAll("input[data-unit]")];
-    const unitRents = rentInputs.map(i => +i.value || 0);
-
-    const errors = [];
+    const errors=[];
     if(!name) errors.push("Objektname fehlt");
-    if(!units || units<1) errors.push("Einheiten muss >= 1 sein");
-    if(!parseYearMonth(startYm)) errors.push("Startdatum muss YYYY-MM sein (z.B. 2024-01)");
+    if(!units || units<1) errors.push("Einheiten muss >=1 sein");
+    if(!parseYearMonth(startYm)) errors.push("Startdatum muss YYYY-MM sein");
     if(!isFinite(principal) || principal<=0) errors.push("Startschuld ungültig");
-    if(!isFinite(interestPa) || interestPa<0) errors.push("Zins ungültig");
     if(!isFinite(paymentMonthly) || paymentMonthly<=0) errors.push("Rate ungültig");
-
-    if(rentInputs.length !== units) errors.push("Bitte zuerst 'Felder erstellen' und Warmmieten je Einheit eintragen.");
+    if(rentInputs.length!==units) errors.push("Bitte Felder erstellen/aktualisieren");
 
     if(errors.length){
-      msg.textContent = "❌ " + errors.join(" · ");
+      el("saveMsg").textContent="❌ " + errors.join(" · ");
       return;
     }
 
-    const obj = {
-      id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)),
-      name, units,
-      unitRents,
+    const payload={
+      name, units, unitRents,
       utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
-      loan: { startYm, principal, interestPa, paymentMonthly, extras: extrasDraft.slice() }
+      loan:{ startYm, principal, interestPa, paymentMonthly }
     };
 
-    props.push(obj);
-    save(props);
-
-    // reset form
-    el("p_name").value = "";
-    el("p_units").value = "";
-    el("l_start").value = "";
-    el("l_principal").value = "";
-    el("l_interest").value = "";
-    el("l_payment").value = "";
-    el("cf_util").value = "";
-    el("unitRents").innerHTML = "";
-    extrasDraft = [];
-    renderExtrasDraft();
-
-    msg.textContent = "✅ Gespeichert.";
+    if(editingId){
+      const idx=props.findIndex(x=>x.id===editingId);
+      if(idx>=0){
+        props[idx]={...props[idx], ...payload};
+        save(props);
+        el("saveMsg").textContent="✅ Aktualisiert.";
+      }
+      clearForm();
+    }else{
+      const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
+      props.push({id, ...payload});
+      save(props);
+      clearForm();
+    }
     render();
-  });
-
-  // Year nav
-  el("prevYear").onclick = ()=>{ selectedYear--; render(); };
-  el("nextYear").onclick = ()=>{ selectedYear++; render(); };
-
-  // Export / Import / Reset
-  el("exportBtn").onclick = ()=>{
-    const data = JSON.stringify(props, null, 2);
-    prompt("Kopieren:", data);
   };
-  el("importBtn").onclick = ()=>{
-    const raw = prompt("JSON einfügen:");
+
+  el("cancelEdit").onclick=(e)=>{ e.preventDefault(); clearForm(); render(); };
+
+  el("prevYear").onclick=()=>{ selectedYear--; render(); };
+  el("nextYear").onclick=()=>{ selectedYear++; render(); };
+
+  el("exportBtn").onclick=()=>{ prompt("Kopieren:", JSON.stringify(props,null,2)); };
+  el("importBtn").onclick=()=>{
+    const raw=prompt("JSON einfügen:");
     if(!raw) return;
     try{
-      const data = JSON.parse(raw);
+      const data=JSON.parse(raw);
       if(!Array.isArray(data)) throw new Error("Format falsch");
-      props = data;
-      save(props);
-      render();
-      alert("Import ok");
-    }catch(err){ alert("Import Fehler: " + (err.message||err)); }
+      props=data; save(props); clearForm(); render(); alert("Import ok");
+    }catch(err){ alert("Import Fehler: "+(err.message||err)); }
   };
-  el("resetBtn").onclick = ()=>{
+  el("resetBtn").onclick=()=>{
     if(!confirm("Alles löschen?")) return;
-    props = [];
-    save(props);
-    render();
+    props=[]; save(props); clearForm(); render();
   };
 
+  el("yearLabel").textContent=selectedYear;
+  setEditMode(false);
   render();
 })();
 </script>
