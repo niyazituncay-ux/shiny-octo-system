@@ -1,1 +1,368 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tunjay Holding</title>
+  <style>
+    :root { --bg:#0b0f17; --card:#121a2a; --muted:#9fb0d0; --text:#e9f0ff; --line:#24304a; --ok:#37d67a; --warn:#ffcc66; --bad:#ff6b6b; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: linear-gradient(180deg, #070a10, #0b0f17); color: var(--text); }
+    header { padding: 22px 16px 10px; max-width: 1100px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: .2px; }
+    .sub { color: var(--muted); font-size: 14px; line-height: 1.35; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px 16px 40px; display: grid; gap: 14px; }
+    .row { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .btn { border: 1px solid var(--line); background: #0d1423; color: var(--text); padding: 10px 12px; border-radius: 10px; cursor: pointer; }
+    .btn:hover { border-color: #3a4b73; }
+    .btn.primary { background: #17305e; border-color: #2c4a86; }
+    .btn.danger { background: #3a1520; border-color: #6b2a3c; }
+    .card { background: rgba(18,26,42,.92); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+    .card h2 { margin: 0 0 10px; font-size: 16px; color: #d7e6ff; }
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
+    .f { grid-column: span 12; }
+    @media (min-width: 760px) { .f.sm6 { grid-column: span 6; } .f.sm4 { grid-column: span 4; } .f.sm3 { grid-column: span 3; } .f.sm2 { grid-column: span 2; } }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input { width: 100%; box-sizing: border-box; padding: 10px 10px; border-radius: 10px; border: 1px solid var(--line); background: #0b1220; color: var(--text); }
+    input::placeholder { color: #6e7fa5; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .kpis { display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 760px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+    .kpi { background:#0b1220; border:1px solid var(--line); border-radius: 12px; padding: 10px; }
+    .kpi .t { color: var(--muted); font-size: 12px; }
+    .kpi .v { margin-top: 6px; font-weight: 700; font-size: 16px; }
+    details { border-radius: 14px; border: 1px solid var(--line); background: rgba(18,26,42,.6); }
+    summary { cursor: pointer; padding: 12px 14px; list-style: none; }
+    summary::-webkit-details-marker { display:none; }
+    .sumrow { display:flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .sumrow .name { font-weight: 700; }
+    .sumrow .meta { color: var(--muted); font-size: 12px; }
+    .inner { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+    .pill { display:inline-block; font-size: 12px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+    .hr { height:1px; background: var(--line); margin: 12px 0; }
+    .tiny { font-size: 12px; color: var(--muted); }
+    .right { margin-left:auto; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .table { width:100%; border-collapse: collapse; margin-top: 10px; }
+    .table th, .table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: right; font-size: 12px; }
+    .table th { color: var(--muted); font-weight: 600; }
+    .table td:first-child, .table th:first-child { text-align:left; }
+  </style>
+</head>
 
+<body>
+  <header>
+    <h1>Tunjay Holding</h1>
+    <div class="sub">
+      Immobilien-Tool: Objektkarten anlegen → speichern → Jahr auswählen → Restschuld/Tilgung/Sondertilgung/Cashflow je Objekt + Gesamtwerte.
+      <br/>Daten bleiben lokal in deinem Browser (LocalStorage).
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- YEAR CONTROL -->
+    <div class="card">
+      <div class="row">
+        <button class="btn" id="prevYear">◀ Jahr</button>
+        <div class="pill">Jahr: <b id="yearLabel"></b></div>
+        <button class="btn" id="nextYear">Jahr ▶</button>
+
+        <div class="right row">
+          <button class="btn" id="exportBtn">Export JSON</button>
+          <button class="btn" id="importBtn">Import JSON</button>
+          <button class="btn danger" id="resetBtn">Alles löschen</button>
+        </div>
+      </div>
+      <div class="hint">Tipp: Sondertilgung gibst du als <b>Jahr + Monat + Betrag</b> an (z. B. 2026 / 12 / 5000). Mehrere Sondertilgungen: mit “+” hinzufügen.</div>
+    </div>
+
+    <!-- ADD PROPERTY CARD -->
+    <div class="card">
+      <h2>Neues Objekt anlegen (Kopfkarte)</h2>
+
+      <div class="grid">
+        <div class="f sm6">
+          <label>Objektname</label>
+          <input id="p_name" placeholder="z. B. MFH Lindenstraße 12" />
+        </div>
+        <div class="f sm3">
+          <label>Anzahl Einheiten</label>
+          <input id="p_units" type="number" min="0" step="1" placeholder="z. B. 6" />
+        </div>
+        <div class="f sm3">
+          <label>Startdatum Darlehen (YYYY-MM)</label>
+          <input id="l_start" placeholder="z. B. 2024-01" />
+        </div>
+
+        <div class="f sm4">
+          <label>Startschuld (€)</label>
+          <input id="l_principal" type="number" step="0.01" placeholder="z. B. 320000" />
+        </div>
+        <div class="f sm4">
+          <label>Zins p.a. (%)</label>
+          <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 3.25" />
+        </div>
+        <div class="f sm4">
+          <label>Annuität / Rate pro Monat (€)</label>
+          <input id="l_payment" type="number" step="0.01" placeholder="z. B. 1450" />
+        </div>
+
+        <div class="f sm4">
+          <label>Kaltmiete pro Monat gesamt (€)</label>
+          <input id="cf_rent" type="number" step="0.01" placeholder="z. B. 2600" />
+        </div>
+        <div class="f sm4">
+          <label>Sonstige Einnahmen pro Monat (€)</label>
+          <input id="cf_otherInc" type="number" step="0.01" placeholder="z. B. 150" />
+        </div>
+        <div class="f sm4">
+          <label>Nicht umlagefähige Kosten pro Monat (€)</label>
+          <input id="cf_nonAlloc" type="number" step="0.01" placeholder="z. B. 280" />
+        </div>
+
+        <div class="f sm4">
+          <label>Instandhaltung Budget pro Monat (€)</label>
+          <input id="cf_maint" type="number" step="0.01" placeholder="z. B. 200" />
+        </div>
+        <div class="f sm4">
+          <label>Versicherung pro Jahr (€)</label>
+          <input id="cf_insYear" type="number" step="0.01" placeholder="z. B. 480" />
+        </div>
+        <div class="f sm4">
+          <label>Grundsteuer pro Jahr (€)</label>
+          <input id="cf_taxYear" type="number" step="0.01" placeholder="z. B. 360" />
+        </div>
+
+        <div class="f sm4">
+          <label>Leerstand (%)</label>
+          <input id="cf_vacRate" type="number" step="0.0001" placeholder="z. B. 3 für 3%" />
+        </div>
+        <div class="f sm8">
+          <label>Sondertilgung(en)</label>
+          <div id="extrasWrap"></div>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn" id="addExtra">+ Sondertilgung hinzufügen</button>
+            <span class="tiny">Format: Jahr / Monat / Betrag</span>
+          </div>
+        </div>
+
+        <div class="f">
+          <div class="row">
+            <button class="btn primary" id="saveProperty">Objekt speichern ✅</button>
+            <span class="tiny" id="saveMsg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO TOTALS -->
+    <div class="card">
+      <h2>Gesamt (ausgewähltes Jahr)</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div></div>
+        <div class="kpi"><div class="t">Gesamt-Tilgung (im Jahr)</div><div class="v" id="tot_principalPaid">–</div></div>
+        <div class="kpi"><div class="t">Gesamt-Sondertilgung (im Jahr)</div><div class="v" id="tot_extraPaid">–</div></div>
+        <div class="kpi"><div class="t">Gesamt-Cashflow (im Jahr)</div><div class="v" id="tot_cashflow">–</div></div>
+      </div>
+      <div class="hint tiny">Cashflow = (Miete + sonstige Einnahmen − Leerstand − Kosten) − (Raten). Jahreswerte sind die Summe über die Monate im gewählten Jahr.</div>
+    </div>
+
+    <!-- OBJECT LIST -->
+    <div class="card">
+      <h2>Objekte</h2>
+      <div id="list"></div>
+      <div class="hint tiny">Du kannst Objekte aufklappen und Details ansehen. “Löschen” entfernt das Objekt dauerhaft aus deinem Browser.</div>
+    </div>
+
+  </div>
+
+<script>
+(function() {
+  const STORAGE_KEY = "tunjay_holding_properties_v1";
+
+  const el = (id) => document.getElementById(id);
+  const fmtEur = (n) => {
+    if (!isFinite(n)) return "–";
+    return new Intl.NumberFormat("de-DE", { style:"currency", currency:"EUR" }).format(n);
+  };
+  const fmtNum = (n) => {
+    if (!isFinite(n)) return "–";
+    return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 }).format(n);
+  };
+  const clamp2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+  function parseYearMonth(s) {
+    // "YYYY-MM"
+    const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
+    if (!m) return null;
+    const y = +m[1], mo = +m[2];
+    if (mo < 1 || mo > 12) return null;
+    return { y, m: mo };
+  }
+
+  function monthIndex(y, m) { return y * 12 + (m - 1); } // 0-based month
+  function fromMonthIndex(idx) {
+    const y = Math.floor(idx / 12);
+    const m = (idx % 12) + 1;
+    return { y, m };
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch { return []; }
+  }
+  function save(props) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
+  }
+
+  // ---- Amortization & CF calculation for a given year ----
+  function calcYearForProperty(p, year) {
+    // Single-loan MVP per property
+    const loan = p.loan;
+    const start = parseYearMonth(loan.startYm);
+    if (!start) {
+      return { active:false, errors:["Startdatum ungültig"], year };
+    }
+
+    const iMonthly = (loan.interestPa / 100) / 12;
+    const payment = loan.paymentMonthly;
+
+    const startIdx = monthIndex(start.y, start.m);
+    const yearStartIdx = monthIndex(year, 1);
+    const yearEndIdx = monthIndex(year, 12);
+
+    // extras map by monthIndex
+    const extrasMap = new Map();
+    for (const ex of (loan.extras || [])) {
+      const y = +ex.year, m = +ex.month, amt = +ex.amount;
+      if (!isFinite(y) || !isFinite(m) || !isFinite(amt)) continue;
+      if (m < 1 || m > 12) continue;
+      const idx = monthIndex(y, m);
+      extrasMap.set(idx, (extrasMap.get(idx) || 0) + amt);
+    }
+
+    let balance = loan.principal;
+    let principalPaidYear = 0;
+    let extraPaidYear = 0;
+    let interestPaidYear = 0;
+    let paymentPaidYear = 0;
+    let cashflowYear = 0;
+    let monthsCounted = 0;
+
+    // If year is before start year, not active
+    if (yearEndIdx < startIdx) {
+      return { active:false, year, balanceEnd: loan.principal, principalPaidYear:0, extraPaidYear:0, cashflowYear:0, interestPaidYear:0, paymentPaidYear:0, monthsCounted:0 };
+    }
+
+    // Simulate from start up to end of selected year (or until balance <= 0)
+    const simStartIdx = startIdx;
+    const simEndIdx = yearEndIdx;
+
+    for (let idx = simStartIdx; idx <= simEndIdx; idx++) {
+      if (balance <= 0) { balance = 0; break; }
+
+      const interest = balance * iMonthly;
+      let rate = payment;
+
+      // last month handling: if rate would overpay principal+interest, cap it
+      const maxNeeded = balance + interest;
+      if (rate > maxNeeded) rate = maxNeeded;
+
+      const principalPaid = Math.max(0, rate - interest);
+      let extra = extrasMap.get(idx) || 0;
+      if (extra > balance - principalPaid) extra = Math.max(0, balance - principalPaid);
+
+      balance = balance - principalPaid - extra;
+
+      const { y, m } = fromMonthIndex(idx);
+      const inSelectedYear = (y === year);
+
+      if (inSelectedYear) {
+        monthsCounted++;
+        principalPaidYear += principalPaid;
+        extraPaidYear += extra;
+        interestPaidYear += interest;
+        paymentPaidYear += rate;
+
+        // Cashflow month (income - expenses - debt service)
+        const rent = p.cashflow.rentMonthly + p.cashflow.otherIncomeMonthly;
+        const vacancy = rent * (p.cashflow.vacancyRate / 100);
+        const insMonthly = p.cashflow.insuranceYearly / 12;
+        const taxMonthly = p.cashflow.propertyTaxYearly / 12;
+
+        const expenses =
+          p.cashflow.nonAllocatableMonthly +
+          p.cashflow.maintenanceMonthly +
+          insMonthly + taxMonthly;
+
+        const netIncomeBeforeDebt = rent - vacancy - expenses;
+        const cfAfterDebt = netIncomeBeforeDebt - rate; // Sondertilgung bewusst NICHT in CF (Liquidität optional); wenn du willst, können wir die auch abziehen.
+        cashflowYear += cfAfterDebt;
+      }
+    }
+
+    // Need balance at end of selected year: if we simulated beyond year, ok.
+    const res = {
+      active: true,
+      year,
+      balanceEnd: clamp2(balance),
+      principalPaidYear: clamp2(principalPaidYear),
+      extraPaidYear: clamp2(extraPaidYear),
+      interestPaidYear: clamp2(interestPaidYear),
+      paymentPaidYear: clamp2(paymentPaidYear),
+      cashflowYear: clamp2(cashflowYear),
+      monthsCounted
+    };
+
+    // Warnings
+    res.warnings = [];
+    if (iMonthly > 0 && payment < loan.principal * iMonthly) res.warnings.push("Rate kleiner als Monatszins (Restschuld wächst).");
+    if (monthsCounted === 0) res.warnings.push("In diesem Jahr keine aktiven Monate (Start später oder bereits abbezahlt).");
+
+    return res;
+  }
+
+  // ---- UI: extras rows ----
+  function makeExtraRow(init={year:"", month:"", amount:""}) {
+    const wrap = document.createElement("div");
+    wrap.className = "row";
+    wrap.style.marginTop = "6px";
+
+    const y = document.createElement("input");
+    y.placeholder = "Jahr (z.B. 2026)";
+    y.type = "number";
+    y.style.maxWidth = "150px";
+    y.value = init.year ?? "";
+
+    const m = document.createElement("input");
+    m.placeholder = "Monat (1-12)";
+    m.type = "number";
+    m.style.maxWidth = "150px";
+    m.value = init.month ?? "";
+
+    const a = document.createElement("input");
+    a.placeholder = "Betrag (€)";
+    a.type = "number";
+    a.step = "0.01";
+    a.style.maxWidth = "220px";
+    a.value = init.amount ?? "";
+
+    const del = document.createElement("button");
+    del.className = "btn";
+    del.textContent = "Entfernen";
+    del.onclick = () => wrap.remove();
+
+    wrap.appendChild(y);
+    wrap.appendChild(m);
+    wrap.appendChild(a);
+    wrap.appendChild(del);
+
+    wrap.getValue = () => ({
+      year: y.value ? +y.value : null,
+      month: m.value ? +m.value : null,
+      amount: a.value ? +a.value : null
