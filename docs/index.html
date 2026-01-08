@@ -1,313 +1,1028 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tuncay Holding – Immobilien Controlling</title>
-<style>
-:root{
-  --bg:#0b0f17;--card:#121a2a;--line:#24304a;
-  --txt:#e9f0ff;--mut:#9fb0d0;
-  --pos:#37d67a;--neg:#ff6b6b;--acc:#4fa3ff;
-}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt);padding:14px}
-.card{max-width:1300px;margin:0 auto 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.right{margin-left:auto}
-h1{margin:0 0 6px;font-size:28px}
-h2{margin:0 0 8px;font-size:16px}
-.small{color:var(--mut);font-size:12px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
-.f{grid-column:span 12}
-@media(min-width:760px){
-  .sm6{grid-column:span 6}
-  .sm4{grid-column:span 4}
-  .sm3{grid-column:span 3}
-}
-label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px}
-input{width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--txt)}
-button{border:1px solid var(--line);background:#0b1220;color:var(--txt);padding:9px 12px;border-radius:10px}
-button.primary{background:#17305e}
-button.danger{background:#3a1520}
-.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
-.kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer}
-.kpi .t{font-size:12px;color:var(--mut)}
-.kpi .v{font-weight:800;margin-top:6px}
-.pos{color:var(--pos)}.neg{color:var(--neg)}
-canvas{width:100%;height:300px}
-details{border:1px solid var(--line);border-radius:12px;margin-top:10px}
-summary{padding:10px;cursor:pointer}
-.inner{padding:10px;border-top:1px solid var(--line)}
-table{width:100%;border-collapse:collapse;margin-top:6px}
-th,td{border-bottom:1px solid var(--line);padding:6px;font-size:13px;text-align:right}
-th{text-align:left;color:var(--mut)}
-.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
-.modal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;max-width:1300px;width:96%;max-height:92vh;overflow:auto}
-.hr{height:1px;background:var(--line);margin:10px 0}
-.progress{height:16px;background:#0b1220;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.progress>div{height:100%;background:linear-gradient(90deg,#37d67a,#4fa3ff)}
-</style>
-</head>
-<body>
-
-<!-- HEADER -->
-<div class="card">
-  <h1>Tuncay Holding</h1>
-  <div class="small" id="info"></div>
-  <div class="row">
-    <button onclick="year--,render()">◀ Jahr</button>
-    <div>Jahr: <b id="yearLbl"></b></div>
-    <button onclick="year++,render()">Jahr ▶</button>
-    <div class="right">
-      <button class="danger" onclick="resetAll()">Reset</button>
-    </div>
-  </div>
-</div>
-
-<!-- FORM -->
-<div class="card">
-  <h2>Objekt anlegen / bearbeiten</h2>
-  <div class="grid">
-    <div class="f sm6"><label>Name</label><input id="name"></div>
-    <div class="f sm3"><label>Einheiten</label><input id="units" type="number"></div>
-    <div class="f sm3"><label>Darlehen Start (YYYY-MM)</label><input id="start"></div>
-
-    <div class="f sm4"><label>Startschuld €</label><input id="principal" type="number"></div>
-    <div class="f sm4"><label>Zins % p.a.</label><input id="interest" type="number"></div>
-    <div class="f sm4"><label>Rate / Monat €</label><input id="payment" type="number"></div>
-
-    <div class="f sm6"><label>Nebenkosten / Monat €</label><input id="util" type="number"></div>
-    <div class="f sm6"><label>Sondertilgung (Jahr) €</label><input id="extra" type="number"></div>
-
-    <div class="f">
-      <label>Warmmieten je Einheit</label>
-      <div id="rents"></div>
-      <button onclick="buildRents()">Felder erstellen</button>
-    </div>
-
-    <div class="f">
-      <button class="primary" onclick="saveObj()">Speichern</button>
-      <div class="small" id="msg"></div>
-    </div>
-  </div>
-</div>
-
-<!-- KPI -->
-<div class="card">
-  <h2>Gesamtbilanz</h2>
-  <div class="kpis">
-    <div class="kpi" onclick="openDebt()"><div class="t">Gesamtschuld</div><div class="v" id="kDebt"></div></div>
-    <div class="kpi" onclick="openCF()"><div class="t">Cashflow (Jahr)</div><div class="v" id="kCF"></div></div>
-    <div class="kpi"><div class="t">Tilgung</div><div class="v" id="kTilg"></div></div>
-    <div class="kpi"><div class="t">Zinsen</div><div class="v" id="kZins"></div></div>
-  </div>
-</div>
-
-<!-- TARGET -->
-<div class="card">
-  <h2>Ziel Cashflow</h2>
-  <div class="grid">
-    <div class="f sm4"><label>Ziel € / Monat</label><input id="targetCF"></div>
-    <div class="f sm4"><label>Mietsteigerung % p.a.</label><input id="growth"></div>
-    <div class="f sm4"><label>&nbsp;</label><button onclick="saveSettings()">Speichern</button></div>
-  </div>
-  <div class="small" id="targetInfo"></div>
-  <div class="progress"><div id="targetBar"></div></div>
-</div>
-
-<!-- CHART -->
-<div class="card">
-  <h2>Schuldenabbau – Gesamt</h2>
-  <canvas id="chart"></canvas>
-</div>
-
-<!-- LIST -->
-<div class="card">
-  <h2>Objekte</h2>
-  <div id="list"></div>
-</div>
-
-<!-- MODAL -->
-<div class="modalBg" id="mbg">
-  <div class="modal">
-    <button onclick="closeModal()">Schließen</button>
-    <div id="mbody"></div>
-  </div>
-</div>
-
-<script>
-/* === STATE === */
-const KEY_DATA="tuncay_objects_full";
-const KEY_SET="tuncay_settings_full";
-let year=new Date().getFullYear();
-let objects=JSON.parse(localStorage.getItem(KEY_DATA)||"[]");
-let settings=JSON.parse(localStorage.getItem(KEY_SET)||'{"target":20000,"growth":2}');
-const €=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(n||0);
-
-/* === HELPERS === */
-function persist(){localStorage.setItem(KEY_DATA,JSON.stringify(objects));}
-function persistSet(){localStorage.setItem(KEY_SET,JSON.stringify(settings));}
-function byId(id){return document.getElementById(id);}
-
-/* === FORM === */
-function buildRents(){
-  const u=+byId("units").value||0;
-  const d=byId("rents");d.innerHTML="";
-  for(let i=0;i<u;i++) d.innerHTML+=`<input data-r="${i}" type="number" placeholder="Einheit ${i+1} €">`;
-}
-function saveObj(){
-  const rents=[...document.querySelectorAll("[data-r]")].map(i=>+i.value||0);
-  objects.push({
-    name:byId("name").value,
-    units:+byId("units").value,
-    start:byId("start").value,
-    principal:+byId("principal").value,
-    interest:+byId("interest").value,
-    payment:+byId("payment").value,
-    util:+byId("util").value,
-    extra:+byId("extra").value,
-    rents
-  });
-  persist(); byId("msg").textContent="Gespeichert ✔"; render();
-}
-
-/* === CALC === */
-function calcObject(o,y){
-  let bal=o.principal,tilg=0,zins=0;
-  const iM=o.interest/100/12;
-  const startY=parseInt(o.start);
-  for(let yy=startY;yy<=y;yy++){
-    for(let m=1;m<=12;m++){
-      const z=bal*iM;
-      const t=Math.max(0,o.payment-z);
-      bal-=t; tilg+=t; zins+=z;
-      if(m===12 && yy===y) bal-=o.extra||0;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tuncay Holding</title>
+  <style>
+    :root{
+      --bg:#0b0f17; --card:#121a2a; --muted:#9fb0d0; --text:#e9f0ff; --line:#24304a;
+      --pos:#37d67a; --neg:#ff6b6b; --btn:#0d1423; --btnP:#17305e; --btnD:#3a1520;
+      --chip:#0b1220; --accent:#4fa3ff;
     }
-  }
-  const warm=o.rents.reduce((a,b)=>a+b,0);
-  const cf=(warm-o.util-o.payment)*12-(o.extra||0);
-  return{bal,tilg,zins,cf,warm};
-}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;}
+    h1{margin:0 0 6px;font-size:30px}
+    h2{margin:0 0 10px;font-size:16px}
+    .sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.35}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;max-width:1100px;margin:0 auto 14px;}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .right{margin-left:auto}
+    .btn{border:1px solid var(--line);background:var(--btn);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:var(--btnP);border-color:#2c4a86}
+    .btn.danger{background:var(--btnD);border-color:#6b2a3c}
+    .btn:hover{border-color:#3a4b73}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+    .f{grid-column:span 12}
+    @media (min-width:760px){
+      .f.sm6{grid-column:span 6}
+      .f.sm4{grid-column:span 4}
+      .f.sm3{grid-column:span 3}
+    }
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input, select{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--text)}
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    @media (min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+    .kpi{background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:10px}
+    .kpi .t{color:var(--muted);font-size:12px}
+    .kpi .v{margin-top:6px;font-weight:800;font-size:16px}
+    .pos{color:var(--pos)} .neg{color:var(--neg)}
+    .clickable{cursor:pointer}
+    .clickable:hover{border-color:#3a4b73}
+    details{border-radius:14px;border:1px solid var(--line);background:rgba(18,26,42,.6);max-width:1100px;margin:0 auto 10px}
+    summary{cursor:pointer;padding:12px 14px;list-style:none}
+    summary::-webkit-details-marker{display:none}
+    .inner{padding:0 14px 14px;border-top:1px solid var(--line)}
+    .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+    .tiny{font-size:12px;color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .hint{background:#0b1220;border:1px dashed #2c3f63;border-radius:12px;padding:10px;color:var(--muted);font-size:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;font-size:13px}
+    th{color:var(--muted);font-weight:600}
+    .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+    .modalBackdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.6);
+      display:none;align-items:center;justify-content:center;padding:18px;z-index:9999;
+    }
+    .modal{
+      width:min(1100px, 100%);max-height:85vh;overflow:auto;
+      background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    }
+    .modalTitle{font-weight:900;font-size:16px}
+    .closeX{margin-left:auto}
+    .barOuter{background:#0b1220;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:18px}
+    .barInner{height:100%;width:0%;background:linear-gradient(90deg,#37d67a,var(--accent));transition:width .6s}
+  </style>
+</head>
 
-/* === RENDER === */
-function render(){
-  byId("yearLbl").textContent=year;
-  byId("info").textContent=`Gespeichert: ${objects.length} Objekt(e)`;
+<body>
+  <div class="card">
+    <h1>Tuncay Holding</h1>
+    <div class="sub">
+      Version: <b>PROFILES · PERSIST · EDIT · TOTALS · KPIs · CLICK-DETAIL · SHARE · EXTRA</b><br/>
+      Cashflow = Warmmiete (gesamt) − Nebenkosten (ihr zahlt) − Rate (Sondertilgung wirkt als Jahres-Abfluss)
+      <div class="tiny" id="loadedInfo"></div>
+    </div>
 
-  let debt=0,cf=0,tilg=0,zins=0;
-  objects.forEach(o=>{
-    const r=calcObject(o,year);
-    debt+=r.bal; cf+=r.cf; tilg+=r.tilg; zins+=r.zins;
-  });
+    <div class="row">
+      <button class="btn" id="prevYear">◀ Jahr</button>
+      <div class="pill">Jahr: <b id="yearLabel"></b></div>
+      <button class="btn" id="nextYear">Jahr ▶</button>
 
-  byId("kDebt").textContent=€(debt);
-  byId("kCF").textContent=€(cf);
-  byId("kCF").className="v "+(cf>=0?"pos":"neg");
-  byId("kTilg").textContent=€(tilg);
-  byId("kZins").textContent=€(zins);
+      <div class="right row">
+        <button class="btn" id="shareBtn">Teilen (Link)</button>
+        <button class="btn" id="exportBtn">Export</button>
+        <button class="btn" id="importBtn">Import</button>
+        <button class="btn danger" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
 
-  const curMonthCF=cf/12;
-  const pct=Math.min(100,Math.max(0,curMonthCF/settings.target*100));
-  byId("targetInfo").textContent=`${pct.toFixed(1)} % von ${€(settings.target)} erreicht`;
-  byId("targetBar").style.width=pct+"%";
+  <!-- KOPFKARTE -->
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Objekt anlegen / bearbeiten (Kopfkarte)</h2>
+      <div class="right">
+        <span class="pill" id="editPill" style="display:none">Bearbeiten aktiv</span>
+      </div>
+    </div>
 
-  drawChart();
-  renderList();
-}
+    <div class="grid" style="margin-top:10px">
+      <div class="f sm6">
+        <label>Objektname</label>
+        <input id="p_name" placeholder="z. B. MFH Breslauerstraße 12">
+      </div>
+      <div class="f sm3">
+        <label>Einheiten</label>
+        <input id="p_units" type="number" min="1" step="1" placeholder="z. B. 6">
+      </div>
+      <div class="f sm3">
+        <label>Start Darlehen (YYYY-MM)</label>
+        <input id="l_start" placeholder="z. B. 2021-04">
+      </div>
 
-/* === LIST === */
-function renderList(){
-  const l=byId("list");l.innerHTML="";
-  objects.forEach((o,i)=>{
-    l.innerHTML+=`
-    <details>
-      <summary>${o.name}</summary>
-      <div class="inner">
-        Startschuld ${€(o.principal)} · Rate ${€(o.payment)}
-        <div class="row">
-          <button onclick="objects.splice(${i},1);persist();render()">Löschen</button>
+      <div class="f sm4">
+        <label>Startschuld (€)</label>
+        <input id="l_principal" type="number" step="0.01" placeholder="z. B. 320000">
+      </div>
+      <div class="f sm4">
+        <label>Zins p.a. (%)</label>
+        <input id="l_interest" type="number" step="0.0001" placeholder="z. B. 1.93">
+      </div>
+      <div class="f sm4">
+        <label>Rate / Monat (€)</label>
+        <input id="l_payment" type="number" step="0.01" placeholder="z. B. 2690">
+      </div>
+
+      <div class="f sm6">
+        <label>Nebenkosten (ihr zahlt) / Monat (€)</label>
+        <input id="cf_util" type="number" step="0.01" placeholder="z. B. 600">
+      </div>
+
+      <div class="f sm6">
+        <label>Sondertilgung (im ausgewählten Jahr) €</label>
+        <input id="st_amount" type="number" step="0.01" placeholder="z. B. 10000">
+        <div class="tiny" style="margin-top:6px">
+          Gilt nur für das <b>aktuell ausgewählte Jahr</b>.
         </div>
       </div>
-    </details>`;
-  });
-}
 
-/* === CHART === */
-function drawChart(){
-  const c=byId("chart"),ctx=c.getContext("2d");
-  c.width=c.offsetWidth;c.height=300;
-  ctx.clearRect(0,0,c.width,c.height);
-  if(!objects.length)return;
+      <div class="f sm6">
+        <label>Warmmieten pro Einheit (monatlich)</label>
+        <div id="unitRents"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="buildUnits">Felder erstellen / aktualisieren</button>
+          <span class="tiny">Pro Einheit ein Warmmiet-Feld.</span>
+        </div>
+      </div>
 
-  let pts=[];
-  for(let i=0;i<=30;i++){
-    let y=year+i,sum=0;
-    objects.forEach(o=>sum+=calcObject(o,y).bal);
-    pts.push({y,sum});
+      <div class="f sm6">
+        <label>&nbsp;</label>
+        <div class="row">
+          <button class="btn primary" id="saveProperty">Objekt speichern ✅</button>
+          <button class="btn" id="cancelEdit" style="display:none">Bearbeitung abbrechen</button>
+          <span class="tiny" id="saveMsg"></span>
+        </div>
+      </div>
+
+      <div class="f">
+        <div class="hint">
+          Tipp: Kennzahlen oben sind <b>klickbar</b> → Detailansicht pro Immobilie (inkl. Jahr-für-Jahr).<br/>
+          Sondertilgung reduziert Restschuld zusätzlich und wird als Jahres-Abfluss im Cashflow (Jahr) berücksichtigt.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GESAMT -->
+  <div class="card">
+    <h2>Gesamtbilanz (ausgewähltes Jahr)</h2>
+    <div class="kpis">
+      <div class="kpi clickable" data-detail="balance">
+        <div class="t">Gesamt-Restschuld (Jahresende)</div><div class="v" id="tot_balance">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="interest">
+        <div class="t">Gesamt Zinsen (Jahr)</div><div class="v" id="tot_interest">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="principal">
+        <div class="t">Gesamt Tilgung (Jahr)</div><div class="v" id="tot_principal">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="extra">
+        <div class="t">Gesamt Sondertilgung (Jahr)</div><div class="v" id="tot_extra">–</div>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi clickable" data-detail="efftilg">
+        <div class="t">Gesamt eff. Tilgung (Jahr)</div><div class="v" id="tot_efftilg">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="cashflow">
+        <div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="tot_cf_year">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="cashflow">
+        <div class="t">Gesamt Cashflow (Monat Ø)</div><div class="v" id="tot_cf_month">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="warm">
+        <div class="t">Gesamt Warmmiete (Monat)</div><div class="v" id="tot_warm_month">–</div>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi clickable" data-detail="util">
+        <div class="t">Gesamt Nebenkosten (Monat)</div><div class="v" id="tot_util_month">–</div>
+      </div>
+      <div class="kpi clickable" data-detail="rate">
+        <div class="t">Gesamt Rate (Monat)</div><div class="v" id="tot_rate_month">–</div>
+      </div>
+      <div class="kpi"><div class="t"></div><div class="v"></div></div>
+      <div class="kpi"><div class="t"></div><div class="v"></div></div>
+    </div>
+  </div>
+
+  <!-- KPIs + ZIEL (PRO PERSON) -->
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Kennzahlen & Ziele</h2>
+      <div class="right tiny">Profilabhängig speicherbar</div>
+    </div>
+
+    <div class="grid" style="margin-top:10px">
+      <div class="f sm4">
+        <label>Profil auswählen</label>
+        <select id="profileSelect"></select>
+      </div>
+
+      <div class="f sm4">
+        <label>Neues Profil (Name)</label>
+        <input id="newProfileName" placeholder="z. B. Niyazi / Bruder">
+      </div>
+
+      <div class="f sm4">
+        <label>&nbsp;</label>
+        <button class="btn" id="addProfileBtn">Profil hinzufügen</button>
+      </div>
+
+      <div class="f sm4">
+        <label>Ziel Cashflow (€/Monat) für dieses Profil</label>
+        <input id="targetInput" type="number" step="0.01" placeholder="z. B. 20000">
+      </div>
+
+      <div class="f sm4">
+        <label>&nbsp;</label>
+        <button class="btn primary" id="saveTargetBtn">Ziel speichern ✅</button>
+      </div>
+
+      <div class="f sm4">
+        <label>&nbsp;</label>
+        <div class="tiny" id="targetMsg"></div>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi clickable" data-detail="return">
+        <div class="t">Gesamtrendite (p.a.)</div>
+        <div class="v" id="kpi_total_return">–</div>
+      </div>
+
+      <div class="kpi">
+        <div class="t">Ziel-Erreichung (Cashflow/Monat)</div>
+        <div class="v" id="kpi_target_percent">–</div>
+      </div>
+
+      <div class="kpi">
+        <div class="t">Aktueller Cashflow (Monat Ø)</div>
+        <div class="v" id="kpi_cf_month_now">–</div>
+      </div>
+
+      <div class="kpi">
+        <div class="t">Rest zum Ziel (Monat)</div>
+        <div class="v" id="kpi_target_rest">–</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="tiny">Fortschritt zum Profil-Ziel</div>
+      <div class="barOuter">
+        <div id="targetBar" class="barInner"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="list"></div>
+
+  <!-- Modal -->
+  <div class="modalBackdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="row">
+        <div class="modalTitle" id="modalTitle">Detail</div>
+        <button class="btn closeX" id="modalClose">Schließen</button>
+      </div>
+      <div class="tiny" id="modalSubtitle" style="margin-top:6px"></div>
+      <div class="hr"></div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ======= STORAGE KEYS =======
+  const STORAGE_KEY_OBJECTS = "tuncay_holding_properties_v3_profiles_clickdetails";
+  const STORAGE_KEY_PROFILES = "tuncay_holding_profiles_v1";
+
+  const LEGACY_KEYS_OBJECTS = [
+    "tuncay_holding_properties_v2_extra",
+    "tuncay_holding_properties_v1",
+    "tunjay_holding_properties",
+    "tunjay_properties_v1",
+    "tunjay_cf_units_v2_edit",
+    "tunjay_objects_edit_v1",
+    "tunjay_cf_units_v2",
+    "tunjay_cf_units",
+    "tunjay_cf"
+  ];
+
+  // ======= HELPERS =======
+  const el = (id) => document.getElementById(id);
+  const fmtEur = (n) => new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(isFinite(n)?n:0);
+  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+  const cashClass = (v) => v>=0 ? "pos" : "neg";
+
+  function parseYearMonth(s){
+    const m = /^(\d{4})-(\d{2})$/.exec((s||"").trim());
+    if(!m) return null;
+    const y=+m[1], mo=+m[2];
+    if(mo<1||mo>12) return null;
+    return {y,m:mo};
   }
-  const max=Math.max(...pts.map(p=>p.sum));
-  const pad=50;
-  ctx.strokeStyle="#24304a";
-  ctx.beginPath();ctx.moveTo(pad,10);ctx.lineTo(pad,260);ctx.lineTo(c.width-10,260);ctx.stroke();
+  function monthIndex(y,m){ return y*12 + (m-1); }
+  function fromMonthIndex(idx){
+    const y=Math.floor(idx/12);
+    const m=(idx%12)+1;
+    return {y,m};
+  }
+  function genId(){
+    return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+  }
+  function safeParse(key){
+    try{ const raw=localStorage.getItem(key); if(!raw) return null; return JSON.parse(raw); }catch{ return null; }
+  }
 
-  ctx.strokeStyle="#4fa3ff";ctx.beginPath();
-  pts.forEach((p,i)=>{
-    const x=pad+i*(c.width-pad-20)/(pts.length-1);
-    const y=260-p.sum/max*230;
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-    if(i%5===0){
-      ctx.fillStyle="#9fb0d0";
-      ctx.fillText(p.y,x-12,280);
-      ctx.fillText(Math.round(p.sum/1000)+"k€",x-20,y-6);
+  // ======= PROFILES =======
+  function defaultProfiles(){
+    return {
+      activeId: "default",
+      profiles: [
+        { id:"default", name:"Ich", targetCashflowMonth: 20000 }
+      ]
+    };
+  }
+  function loadProfiles(){
+    const d = safeParse(STORAGE_KEY_PROFILES);
+    if(!d || !Array.isArray(d.profiles) || !d.activeId) return defaultProfiles();
+    const profiles = d.profiles
+      .filter(p => p && p.id && p.name)
+      .map(p => ({
+        id: String(p.id),
+        name: String(p.name),
+        targetCashflowMonth: +p.targetCashflowMonth || 0
+      }));
+    if(!profiles.length) return defaultProfiles();
+    const activeId = profiles.some(p=>p.id===d.activeId) ? d.activeId : profiles[0].id;
+    return { activeId, profiles };
+  }
+  function saveProfiles(state){
+    localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(state));
+  }
+
+  let profileState = loadProfiles();
+  function getActiveProfile(){
+    return profileState.profiles.find(p=>p.id===profileState.activeId) || profileState.profiles[0];
+  }
+
+  function renderProfilesUI(){
+    const sel = el("profileSelect");
+    sel.innerHTML = "";
+    profileState.profiles.forEach(p=>{
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name;
+      if(p.id === profileState.activeId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+    const ap = getActiveProfile();
+    el("targetInput").value = ap.targetCashflowMonth || "";
+    el("targetMsg").textContent = `Aktives Profil: ${ap.name}`;
+  }
+
+  el("profileSelect").addEventListener("change", () => {
+    profileState.activeId = el("profileSelect").value;
+    saveProfiles(profileState);
+    renderProfilesUI();
+    render();
+  });
+
+  el("addProfileBtn").addEventListener("click", () => {
+    const name = (el("newProfileName").value || "").trim();
+    if(!name){ el("targetMsg").textContent = "❌ Bitte Profilnamen eingeben."; return; }
+    const id = genId();
+    profileState.profiles.push({ id, name, targetCashflowMonth: 0 });
+    profileState.activeId = id;
+    saveProfiles(profileState);
+    el("newProfileName").value = "";
+    renderProfilesUI();
+    render();
+  });
+
+  el("saveTargetBtn").addEventListener("click", () => {
+    const ap = getActiveProfile();
+    const v = +el("targetInput").value || 0;
+    ap.targetCashflowMonth = round2(v);
+    saveProfiles(profileState);
+    el("targetMsg").textContent = `✅ Ziel gespeichert für „${ap.name}“`;
+    render();
+  });
+
+  // ======= OBJECTS: NORMALIZE + MIGRATION =======
+  function normalizeExtras(extras){
+    const map = {};
+    if(extras && typeof extras === "object" && !Array.isArray(extras)){
+      for(const k of Object.keys(extras)){
+        const v = +extras[k] || 0;
+        if(v !== 0) map[String(k)] = v;
+      }
     }
-  });
-  ctx.stroke();
-}
-
-/* === MODALS === */
-function openDebt(){
-  let html="<h3>Monatliche Tilgung (Gesamt)</h3><table><tr><th>Objekt</th><th>Restschuld</th></tr>";
-  objects.forEach(o=>{
-    const r=calcObject(o,year);
-    html+=`<tr><td>${o.name}</td><td>${€(r.bal)}</td></tr>`;
-  });
-  html+="</table>";
-  openModal(html);
-}
-function openCF(){
-  let html="<h3>Cashflow (Jahr)</h3><table><tr><th>Objekt</th><th>CF</th></tr>";
-  objects.forEach(o=>{
-    const r=calcObject(o,year);
-    html+=`<tr><td>${o.name}</td><td>${€(r.cf)}</td></tr>`;
-  });
-  html+="</table>";
-  openModal(html);
-}
-function openModal(html){
-  byId("mbody").innerHTML=html;
-  byId("mbg").style.display="flex";
-}
-function closeModal(){byId("mbg").style.display="none";}
-
-/* === SETTINGS === */
-function saveSettings(){
-  settings.target=+byId("targetCF").value||settings.target;
-  settings.growth=+byId("growth").value||settings.growth;
-  persistSet(); render();
-}
-
-/* === RESET === */
-function resetAll(){
-  if(confirm("Alles löschen?")){
-    objects=[];persist();render();
+    return map;
   }
-}
 
-byId("targetCF").value=settings.target;
-byId("growth").value=settings.growth;
-render();
+  function normalize(p){
+    const id = p?.id || genId();
+    const name = (p?.name || p?.objektname || "Unbenannt").trim() || "Unbenannt";
+    const units = Math.max(1, Math.floor(+p?.units || +p?.einheiten || 1));
+
+    const loan = p?.loan || {};
+    const startYm = (loan.startYm || p?.startYm || p?.start || p?.darlehenStart || "").trim();
+    const principal = +loan.principal || +p?.principal || +p?.startschuld || 0;
+    const interestPa = +loan.interestPa || +p?.interestPa || +p?.zins || 0;
+    const paymentMonthly = +loan.paymentMonthly || +p?.paymentMonthly || +p?.rate || 0;
+
+    const utilitiesMonthly = +p?.utilitiesMonthly || +p?.nebenkosten || 0;
+
+    let unitRents = p?.unitRents;
+    if(!Array.isArray(unitRents)) unitRents = [];
+
+    const warmTotal = +p?.warmRentTotal || +p?.warmmiete || +p?.kaltmiete || 0;
+    if(unitRents.length === 0 && warmTotal > 0){
+      const per = warmTotal / units;
+      unitRents = Array.from({length: units}, ()=> round2(per));
+    }
+
+    unitRents = unitRents.slice(0, units);
+    while(unitRents.length < units) unitRents.push(0);
+
+    const extras = normalizeExtras(p?.extras || loan?.extras || loan?.extraPayments);
+
+    return {
+      id, name, units,
+      unitRents,
+      utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
+      loan: {
+        startYm,
+        principal: isFinite(principal) ? principal : 0,
+        interestPa: isFinite(interestPa) ? interestPa : 0,
+        paymentMonthly: isFinite(paymentMonthly) ? paymentMonthly : 0,
+        extras
+      }
+    };
+  }
+
+  function loadObjectsWithMigration(){
+    const cur = safeParse(STORAGE_KEY_OBJECTS);
+    if(Array.isArray(cur) && cur.length) return cur.map(normalize);
+
+    for(const k of LEGACY_KEYS_OBJECTS){
+      const d = safeParse(k);
+      if(Array.isArray(d) && d.length){
+        const norm = d.map(normalize);
+        localStorage.setItem(STORAGE_KEY_OBJECTS, JSON.stringify(norm));
+        return norm;
+      }
+    }
+    return [];
+  }
+
+  let props = loadObjectsWithMigration();
+  function persistObjects(){ localStorage.setItem(STORAGE_KEY_OBJECTS, JSON.stringify(props)); }
+
+  // ======= UI STATE =======
+  let selectedYear = new Date().getFullYear();
+  let editingId = null;
+
+  function setEditMode(on){
+    el("editPill").style.display = on ? "inline-block" : "none";
+    el("cancelEdit").style.display = on ? "inline-block" : "none";
+    el("saveProperty").textContent = on ? "Änderungen speichern ✅" : "Objekt speichern ✅";
+  }
+  function clearForm(){
+    el("p_name").value="";
+    el("p_units").value="";
+    el("l_start").value="";
+    el("l_principal").value="";
+    el("l_interest").value="";
+    el("l_payment").value="";
+    el("cf_util").value="";
+    el("st_amount").value="";
+    el("unitRents").innerHTML="";
+    el("saveMsg").textContent="";
+    editingId=null;
+    setEditMode(false);
+  }
+
+  // ======= Unit fields =======
+  function readUnitRents(){
+    return [...el("unitRents").querySelectorAll("input[data-unit]")].map(i => +i.value || 0);
+  }
+  function buildUnitRentFields(units, existing=[]){
+    const wrap = el("unitRents");
+    wrap.innerHTML="";
+    const n = Math.max(0, Math.floor(units||0));
+    for(let i=0;i<n;i++){
+      const d = document.createElement("div");
+      d.style.marginBottom="8px";
+      d.innerHTML = `
+        <label class="tiny">Einheit ${i+1} – Warmmiete/Monat (€)</label>
+        <input type="number" step="0.01" data-unit="${i}" value="${existing[i] ?? ""}">
+      `;
+      wrap.appendChild(d);
+    }
+  }
+  el("buildUnits").onclick=(e)=>{
+    e.preventDefault();
+    const units = +el("p_units").value;
+    buildUnitRentFields(units, readUnitRents());
+  };
+
+  // ======= Extras (Sondertilgung) =======
+  function getExtraForYear(p, year){
+    const map = p?.loan?.extras || {};
+    return +map[String(year)] || 0;
+  }
+  function setExtraForYear(p, year, amount){
+    if(!p.loan.extras) p.loan.extras = {};
+    const v = +amount || 0;
+    if(v === 0) delete p.loan.extras[String(year)];
+    else p.loan.extras[String(year)] = round2(v);
+  }
+
+  // ======= CALC: year (inkl. Sondertilgung) =======
+  function calcYear(p, year){
+    const start = parseYearMonth(p.loan.startYm);
+    if(!start) return null;
+
+    const iMonthly = (p.loan.interestPa/100)/12;
+    const payment = +p.loan.paymentMonthly || 0;
+
+    const startIdx = monthIndex(start.y, start.m);
+    const endIdx = monthIndex(year, 12);
+
+    let balance = +p.loan.principal || 0;
+    let interestPaid=0, principalPaid=0;
+
+    for(let idx=startIdx; idx<=endIdx; idx++){
+      if(balance <= 0) { balance = 0; break; }
+      if(payment <= 0) break;
+
+      const interest = balance * iMonthly;
+      let rate = payment;
+
+      const need = balance + interest;
+      if(rate > need) rate = need;
+
+      const prin = Math.max(0, rate - interest);
+      balance = balance - prin;
+
+      const ym = fromMonthIndex(idx);
+      if(ym.y === year){
+        interestPaid += interest;
+        principalPaid += prin;
+      }
+    }
+
+    const extra = getExtraForYear(p, year);
+    const extraApplied = Math.max(0, Math.min(extra, balance));
+    balance = balance - extraApplied;
+
+    const warmMonth = (p.unitRents || []).reduce((s,x)=> s + (+x||0), 0);
+    const utilMonth = (+p.utilitiesMonthly||0);
+
+    const cfMonth = warmMonth - utilMonth - payment;
+    const cfYear = (cfMonth * 12) - extraApplied;
+
+    return {
+      startYear: start.y,
+      balanceEnd: round2(balance),
+      interestPaid: round2(interestPaid),
+      principalPaid: round2(principalPaid),
+      extraPaid: round2(extraApplied),
+      effTilg: round2(principalPaid + extraApplied),
+      cfYear: round2(cfYear),
+      cfMonth: round2(cfMonth),
+      warmMonth: round2(warmMonth),
+      utilMonth: round2(utilMonth),
+      rateMonth: round2(payment),
+    };
+  }
+
+  function getYearRange(){
+    let minY = selectedYear;
+    props.forEach(p=>{
+      const s = parseYearMonth(p.loan.startYm);
+      if(s) minY = Math.min(minY, s.y);
+    });
+    return { from: minY, to: selectedYear };
+  }
+
+  // ======= TOTALS + KPIs =======
+  function renderTotals(){
+    let totBal=0, totInt=0, totPrin=0, totExtra=0, totEff=0, totCfYear=0, totWarmMonth=0, totUtilMonth=0, totRateMonth=0;
+
+    props.forEach(p=>{
+      const y = calcYear(p, selectedYear);
+      if(!y) return;
+      totBal += y.balanceEnd;
+      totInt += y.interestPaid;
+      totPrin += y.principalPaid;
+      totExtra += y.extraPaid;
+      totEff += y.effTilg;
+      totCfYear += y.cfYear;
+      totWarmMonth += y.warmMonth;
+      totUtilMonth += y.utilMonth;
+      totRateMonth += y.rateMonth;
+    });
+
+    totBal = round2(totBal); totInt=round2(totInt); totPrin=round2(totPrin); totExtra=round2(totExtra);
+    totEff=round2(totEff); totCfYear=round2(totCfYear); totWarmMonth=round2(totWarmMonth);
+    totUtilMonth=round2(totUtilMonth); totRateMonth=round2(totRateMonth);
+
+    el("tot_balance").textContent = fmtEur(totBal);
+    el("tot_interest").textContent = fmtEur(totInt);
+    el("tot_principal").textContent = fmtEur(totPrin);
+    el("tot_extra").textContent = fmtEur(totExtra);
+    el("tot_efftilg").textContent = fmtEur(totEff);
+
+    const cfYearEl = el("tot_cf_year");
+    cfYearEl.textContent = fmtEur(totCfYear);
+    cfYearEl.className = "v " + cashClass(totCfYear);
+
+    const cfMonth = totCfYear / 12;
+    const cfMonthEl = el("tot_cf_month");
+    cfMonthEl.textContent = fmtEur(round2(cfMonth));
+    cfMonthEl.className = "v " + cashClass(cfMonth);
+
+    el("tot_warm_month").textContent = fmtEur(totWarmMonth);
+    el("tot_util_month").textContent = fmtEur(totUtilMonth);
+    el("tot_rate_month").textContent = fmtEur(totRateMonth);
+
+    let totalReturnPct = 0;
+    if(totBal > 0){
+      totalReturnPct = ((totCfYear + totEff) / totBal) * 100;
+    }
+    el("kpi_total_return").textContent = totalReturnPct.toFixed(2).replace(".", ",") + " %";
+
+    const ap = getActiveProfile();
+    const target = +ap.targetCashflowMonth || 0;
+    const currentCfMonth = cfMonth;
+
+    let progressPct = 0;
+    if(target > 0){
+      progressPct = Math.max(0, Math.min(100, (currentCfMonth / target) * 100));
+    }
+
+    el("kpi_target_percent").textContent =
+      (target > 0 ? (progressPct.toFixed(1).replace(".", ",") + " % erreicht") : "Bitte Ziel setzen");
+    el("targetBar").style.width = progressPct + "%";
+
+    const cfNowEl = el("kpi_cf_month_now");
+    cfNowEl.textContent = fmtEur(round2(currentCfMonth));
+    cfNowEl.className = "v " + cashClass(currentCfMonth);
+
+    const rest = (target > 0) ? (target - currentCfMonth) : 0;
+    const restEl = el("kpi_target_rest");
+    restEl.textContent = (target > 0) ? fmtEur(round2(rest)) : "–";
+    restEl.className = "v " + (target>0 && rest <= 0 ? "pos" : "");
+  }
+
+  // ======= LIST =======
+  function renderList(){
+    const list = el("list");
+    list.innerHTML = "";
+
+    if(!props.length){
+      const empty = document.createElement("div");
+      empty.className = "card";
+      empty.innerHTML = `<div class="tiny">Noch keine Objekte gespeichert. Lege oben ein Objekt an.</div>`;
+      list.appendChild(empty);
+      return;
+    }
+
+    props.forEach(p=>{
+      const y = calcYear(p, selectedYear);
+      const cf = y ? y.cfMonth : 0;
+
+      const det = document.createElement("details");
+      const sum = document.createElement("summary");
+
+      sum.innerHTML = `
+        <div class="row" style="width:100%">
+          <div>
+            <div style="font-weight:800">${p.name}</div>
+            <div class="tiny">${p.units} Einheiten · Start ${p.loan.startYm} · Rate ${fmtEur(p.loan.paymentMonthly)}/Monat</div>
+          </div>
+          <div class="pill">Cashflow: <b class="${cashClass(cf)}">${fmtEur(cf)}/Monat</b></div>
+        </div>
+      `;
+
+      const extraThisYear = getExtraForYear(p, selectedYear);
+
+      const inner = document.createElement("div");
+      inner.className = "inner";
+      inner.innerHTML = `
+        <div class="kpis" style="margin-top:12px">
+          <div class="kpi"><div class="t">Warmmiete (Monat)</div><div class="v">${fmtEur(y?.warmMonth||0)}</div></div>
+          <div class="kpi"><div class="t">Nebenkosten (Monat)</div><div class="v">${fmtEur(y?.utilMonth||0)}</div></div>
+          <div class="kpi"><div class="t">Cashflow (Monat)</div><div class="v ${cashClass(cf)}">${fmtEur(cf)}</div></div>
+          <div class="kpi"><div class="t">Sondertilgung (dieses Jahr)</div><div class="v">${fmtEur(extraThisYear||0)}</div></div>
+        </div>
+
+        <div class="kpis" style="margin-top:10px">
+          <div class="kpi"><div class="t">Zinsen (Jahr)</div><div class="v">${fmtEur(y?.interestPaid||0)}</div></div>
+          <div class="kpi"><div class="t">Tilgung (Jahr)</div><div class="v">${fmtEur(y?.principalPaid||0)}</div></div>
+          <div class="kpi"><div class="t">Restschuld (Jahresende)</div><div class="v">${fmtEur(y?.balanceEnd||0)}</div></div>
+          <div class="kpi"><div class="t">Eff. Tilgung (inkl. Sonder)</div><div class="v">${fmtEur(y?.effTilg||0)}</div></div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="tiny">Warmmieten je Einheit: ${(p.unitRents||[]).map((r,i)=>`E${i+1}: ${fmtEur(+r||0)}`).join(" · ") || "—"}</div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <button class="btn" data-edit="${p.id}">Bearbeiten</button>
+          <button class="btn danger" data-del="${p.id}">Objekt löschen</button>
+        </div>
+      `;
+
+      det.appendChild(sum);
+      det.appendChild(inner);
+      list.appendChild(det);
+    });
+
+    document.querySelectorAll("[data-del]").forEach(b=>{
+      b.onclick=()=>{
+        const id=b.getAttribute("data-del");
+        if(!confirm("Objekt wirklich löschen?")) return;
+        props = props.filter(x=>x.id!==id);
+        persistObjects();
+        if(editingId===id) clearForm();
+        render();
+      };
+    });
+
+    document.querySelectorAll("[data-edit]").forEach(b=>{
+      b.onclick=()=>{
+        const id=b.getAttribute("data-edit");
+        const p=props.find(x=>x.id===id);
+        if(!p) return;
+
+        editingId=id;
+        setEditMode(true);
+
+        el("p_name").value=p.name||"";
+        el("p_units").value=p.units||"";
+        el("l_start").value=p.loan.startYm||"";
+        el("l_principal").value=p.loan.principal ?? "";
+        el("l_interest").value=p.loan.interestPa ?? "";
+        el("l_payment").value=p.loan.paymentMonthly ?? "";
+        el("cf_util").value=p.utilitiesMonthly ?? "";
+        el("st_amount").value = getExtraForYear(p, selectedYear) || "";
+
+        buildUnitRentFields(p.units, p.unitRents||[]);
+        el("saveMsg").textContent="Bearbeitung geladen. Ändern → speichern.";
+        window.scrollTo({top:0, behavior:"smooth"});
+      };
+    });
+  }
+
+  function render(){
+    el("yearLabel").textContent = selectedYear;
+    el("loadedInfo").textContent = `Gespeichert: ${props.length} Objekt(e) · Profile: ${profileState.profiles.length}`;
+    renderTotals();
+    renderList();
+  }
+
+  // ======= SAVE / UPDATE OBJECT =======
+  el("saveProperty").onclick=(e)=>{
+    e.preventDefault();
+
+    const name=(el("p_name").value||"").trim();
+    const units=Math.max(0, Math.floor(+el("p_units").value));
+    const startYm=(el("l_start").value||"").trim();
+    const principal=+el("l_principal").value;
+    const interestPa=+el("l_interest").value;
+    const paymentMonthly=+el("l_payment").value;
+    const utilitiesMonthly=+el("cf_util").value;
+    const extraThisYear = +el("st_amount").value || 0;
+
+    const rentInputs=[...el("unitRents").querySelectorAll("input[data-unit]")];
+    const unitRents=rentInputs.map(i=>+i.value||0);
+
+    const errors=[];
+    if(!name) errors.push("Objektname fehlt");
+    if(!units || units<1) errors.push("Einheiten muss >=1 sein");
+    if(!parseYearMonth(startYm)) errors.push("Startdatum muss YYYY-MM sein");
+    if(!isFinite(principal) || principal<=0) errors.push("Startschuld ungültig");
+    if(!isFinite(paymentMonthly) || paymentMonthly<=0) errors.push("Rate ungültig");
+    if(rentInputs.length!==units) errors.push("Bitte Warmmiet-Felder erstellen/aktualisieren");
+    if(extraThisYear < 0) errors.push("Sondertilgung darf nicht negativ sein");
+
+    if(errors.length){
+      el("saveMsg").textContent="❌ " + errors.join(" · ");
+      return;
+    }
+
+    let base = normalize({
+      id: editingId || undefined,
+      name, units, unitRents,
+      utilitiesMonthly: isFinite(utilitiesMonthly) ? utilitiesMonthly : 0,
+      loan: { startYm, principal, interestPa, paymentMonthly, extras: {} }
+    });
+
+    if(editingId){
+      const old = props.find(x=>x.id===editingId);
+      if(old?.loan?.extras) base.loan.extras = {...old.loan.extras};
+    }
+
+    setExtraForYear(base, selectedYear, extraThisYear);
+
+    if(editingId){
+      const idx = props.findIndex(x=>x.id===editingId);
+      if(idx>=0) props[idx]=base;
+    }else{
+      props.push(base);
+    }
+
+    persistObjects();
+    clearForm();
+    render();
+  };
+
+  el("cancelEdit").onclick=(e)=>{ e.preventDefault(); clearForm(); render(); };
+
+  // Year nav
+  el("prevYear").onclick=()=>{ selectedYear--; render(); };
+  el("nextYear").onclick=()=>{ selectedYear++; render(); };
+
+  // Export/Import/Reset
+  el("exportBtn").onclick=()=>{ prompt("Kopieren:", JSON.stringify(props,null,2)); };
+
+  el("importBtn").onclick=()=>{
+    const raw=prompt("JSON einfügen:");
+    if(!raw) return;
+    try{
+      const data=JSON.parse(raw);
+      if(!Array.isArray(data)) throw new Error("Format falsch");
+      props=data.map(normalize);
+      persistObjects();
+      clearForm();
+      render();
+      alert("✅ Import ok");
+    }catch(err){
+      alert("Import Fehler: " + (err.message||err));
+    }
+  };
+
+  el("resetBtn").onclick=()=>{
+    if(!confirm("Alles löschen?")) return;
+    props=[];
+    persistObjects();
+    clearForm();
+    render();
+  };
+
+  // ======= CLICK-DETAIL MODAL =======
+  function openModal(title, subtitle, html){
+    el("modalTitle").textContent = title;
+    el("modalSubtitle").textContent = subtitle || "";
+    el("modalBody").innerHTML = html;
+    el("modalBackdrop").style.display = "flex";
+  }
+  function closeModal(){
+    el("modalBackdrop").style.display = "none";
+    el("modalBody").innerHTML = "";
+  }
+  el("modalClose").onclick = closeModal;
+  el("modalBackdrop").addEventListener("click", (e)=>{
+    if(e.target === el("modalBackdrop")) closeModal();
+  });
+
+  function sumByPropForYear(metricKey){
+    return props.map(p=>{
+      const y = calcYear(p, selectedYear);
+      return { id:p.id, name:p.name, value: y ? (+y[metricKey]||0) : 0, startYm: p.loan.startYm };
+    });
+  }
+
+  function buildYearByYearTable(metricKey, formatter){
+    const {from, to} = getYearRange();
+    if(!props.length) return `<div class="tiny">Keine Objekte.</div>`;
+
+    let html = `<div class="tiny">Jahr-für-Jahr: ${from} → ${to}</div>`;
+    html += `<div class="hr"></div>`;
+
+    props.forEach(p=>{
+      const s = parseYearMonth(p.loan.startYm);
+      const startY = s ? s.y : from;
+      const years = [];
+      for(let y=Math.max(from,startY); y<=to; y++){
+        const cy = calcYear(p, y);
+        years.push({year:y, val: cy ? (+cy[metricKey]||0) : 0});
+      }
+
+      html += `<div style="margin-top:12px"><b>${p.name}</b> <span class="tag">Start ${p.loan.startYm || "—"}</span></div>`;
+      html += `<table><thead><tr><th>Jahr</th><th>Wert</th></tr></thead><tbody>`;
+      years.forEach(r=>{
+        html += `<tr><td>${r.year}</td><td>${formatter(r.val)}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+    });
+
+    return html;
+  }
+
+  function handleDetail(type){
+    const y = selectedYear;
+    if(!props.length){
+      openModal("Keine Daten", "", `<div class="tiny">Bitte zuerst Objekte anlegen.</div>`);
+      return;
+    }
+
+    if(type === "balance"){
+      const per = sumByPropForYear("balanceEnd").sort((a,b)=>b.value-a.value);
+      const list = per.map(x=>`<tr><td>${x.name}</td><td><b>${fmtEur(x.value)}</b></td></tr>`).join("");
+      const table = `<table><thead><tr><th>Immobilie</th><th>Restschuld (Ende ${y})</th></tr></thead><tbody>${list}</tbody></table>`;
+      const years = buildYearByYearTable("balanceEnd", fmtEur);
+      openModal("Gesamt-Restschuld – Details", `Aufteilung pro Immobilie + Verlauf bis ${y}`, table + `<div class="hr"></div>` + years);
+      return;
+    }
+
+    if(type === "return"){
+      const rows = props.map(p=>{
+        const cy = calcYear(p, y);
+        const bal = cy ? cy.balanceEnd : 0;
+        const num = cy ? (cy.cfYear + cy.effTilg) : 0;
+        const pct = bal>0 ? (num/bal*100) : 0;
+        return {name:p.name, pct, bal, num};
+      }).sort((a,b)=>b.pct-a.pct);
+
+      const list = rows.map(r=>`
+        <tr>
+          <td>${r.name}</td>
+          <td><b>${r.pct.toFixed(2).replace(".", ",")} %</b></td>
+          <td class="tiny">${fmtEur(r.num)} / ${fmtEur(r.bal)}</td>
+        </tr>`).join("");
+
+      const table = `
+        <table>
+          <thead><tr><th>Immobilie</th><th>Rendite p.a. (${y})</th><th>Basis</th></tr></thead>
+          <tbody>${list}</tbody>
+        </table>
+        <div class="tiny" style="margin-top:8px">
+          Formel je Objekt: (Cashflow Jahr + eff. Tilgung Jahr) / Restschuld (Ende Jahr).
+        </div>
+      `;
+
+      const {from, to} = getYearRange();
+      let html = table + `<div class="hr"></div><div class="tiny">Jahr-für-Jahr Rendite: ${from} → ${to}</div>`;
+      props.forEach(p=>{
+        const s = parseYearMonth(p.loan.startYm);
+        const startY = s ? s.y : from;
+
+        html += `<div style="margin-top:12px"><b>${p.name}</b></div>`;
+        html += `<table><thead><tr><th>Jahr</th><th>Rendite</th></tr></thead><tbody>`;
+        for(let yr=Math.max(from,startY); yr<=to; yr++){
+          const cy = calcYear(p, yr);
+          const bal = cy ? cy.balanceEnd : 0;
+          const num = cy ? (cy.cfYear + cy.effTilg) : 0;
+          const pct = bal>0 ? (num/bal*100) : 0;
+          html += `<tr><td>${yr}</td><td>${pct.toFixed(2).replace(".", ",")} %</td></tr>`;
+        }
+        html += `</tbody></table>`;
+      });
+
+      openModal("Gesamtrendite – Details", `Aufteilung + Verlauf bis ${y}`, html);
+      return;
+    }
+
+    const map = {
+      interest: { title:"Gesamt Zinsen", key:"interestPaid", unit:"(Jahr)", fmt: fmtEur },
+      principal:{ title:"Gesamt Tilgung", key:"principalPaid", unit:"(Jahr)", fmt: fmtEur },
+      extra:   { title:"Gesamt Sondertilgung", key:"extraPaid", unit:"(Jahr)", fmt: fmtEur },
+      efftilg: { title:"Gesamt eff. Tilgung", key:"effTilg", unit:"(Jahr)", fmt: fmtEur },
+      cashflow:{ title:"Gesamt Cashflow", key:"cfYear", unit:"(Jahr)", fmt: fmtEur },
+      warm:    { title:"Gesamt Warmmiete", key:"warmMonth", unit:"(Monat)", fmt: fmtEur },
+      util:    { title:"Gesamt Nebenkosten", key:"utilMonth", unit:"(Monat)", fmt: fmtEur },
+      rate:    { title:"Gesamt Rate", key:"rateMonth", unit:"(Monat)", fmt: fmtEur },
+    };
+
+    const cfg = map[type];
+    if(!cfg) return;
+
+    const per = sumByPropForYear(cfg.key).sort((a,b)=>b.value-a.value);
+    const list = per.map(x=>`<tr><td>${x.name}</td><td><b>${cfg.fmt(x.value)}</b></td></tr>`).join("");
+    const table = `<table><thead><tr><th>Immobilie</th><th>${cfg.title} ${cfg.unit}</th></tr></thead><tbody>${list}</tbody></table>`;
+
+    let yearTable = buildYearByYearTable(cfg.key, cfg.fmt);
+    openModal(`${cfg.title} – Details`, `Aufteilung pro Immobilie + Verlauf bis ${y}`, table + `<div class="hr"></div>` + yearTable);
+  }
+
+  document.querySelectorAll("[data-detail]").forEach(k=>{
+    k.addEventListener("click", ()=> handleDetail(k.getAttribute("data-detail")));
+  });
+
+  // ======= INIT =======
+  renderProfilesUI();
+  setEditMode(false);
+  render();
+})();
 </script>
-
 </body>
 </html>
