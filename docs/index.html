@@ -1,509 +1,313 @@
-<!doctype html><html lang="de"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tuncay Holding</title>
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tuncay Holding – Immobilien Controlling</title>
 <style>
-:root{--bg:#0b0f17;--card:#121a2a;--txt:#e9f0ff;--mut:#9fb0d0;--line:#24304a;--pos:#37d67a;--neg:#ff6b6b;--acc:#4fa3ff}
-body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt);padding:14px}
-.card{max-width:1100px;margin:0 auto 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+:root{
+  --bg:#0b0f17;--card:#121a2a;--line:#24304a;
+  --txt:#e9f0ff;--mut:#9fb0d0;
+  --pos:#37d67a;--neg:#ff6b6b;--acc:#4fa3ff;
+}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt);padding:14px}
+.card{max-width:1300px;margin:0 auto 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .right{margin-left:auto}
-h1{margin:0 0 6px;font-size:28px} h2{margin:0 0 8px;font-size:15px}
+h1{margin:0 0 6px;font-size:28px}
+h2{margin:0 0 8px;font-size:16px}
 .small{color:var(--mut);font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
-.f{grid-column:span 12} @media(min-width:760px){.sm6{grid-column:span 6}.sm4{grid-column:span 4}.sm3{grid-column:span 3}}
-label{display:block;color:var(--mut);font-size:12px;margin:0 0 6px}
-input,select{width:100%;box-sizing:border-box;padding:9px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--txt)}
-.btn{border:1px solid var(--line);background:#0b1220;color:var(--txt);padding:9px 11px;border-radius:10px;cursor:pointer}
-.btn:hover{border-color:#3a4b73} .primary{background:#17305e;border-color:#2c4a86}
-.danger{background:#3a1520;border-color:#6b2a3c}
+.f{grid-column:span 12}
+@media(min-width:760px){
+  .sm6{grid-column:span 6}
+  .sm4{grid-column:span 4}
+  .sm3{grid-column:span 3}
+}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px}
+input{width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--txt)}
+button{border:1px solid var(--line);background:#0b1220;color:var(--txt);padding:9px 12px;border-radius:10px}
+button.primary{background:#17305e}
+button.danger{background:#3a1520}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
 .kpi{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer}
-.kpi .t{color:var(--mut);font-size:12px} .kpi .v{margin-top:6px;font-weight:800;font-variant-numeric:tabular-nums}
-.pos{color:var(--pos)} .neg{color:var(--neg)}
-table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid var(--line);padding:7px 6px;font-size:13px;vertical-align:top}
-th{color:var(--mut);font-weight:600}
-details{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:10px 0;background:rgba(11,18,32,.5)}
-summary{padding:10px 12px;cursor:pointer;list-style:none} summary::-webkit-details-marker{display:none}
-.inner{padding:10px 12px;border-top:1px solid var(--line)}
-canvas{width:100%;height:210px;display:block}
-.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:14px}
-.modal{width:min(1100px,100%);max-height:85vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi .t{font-size:12px;color:var(--mut)}
+.kpi .v{font-weight:800;margin-top:6px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+canvas{width:100%;height:300px}
+details{border:1px solid var(--line);border-radius:12px;margin-top:10px}
+summary{padding:10px;cursor:pointer}
+.inner{padding:10px;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th,td{border-bottom:1px solid var(--line);padding:6px;font-size:13px;text-align:right}
+th{text-align:left;color:var(--mut)}
+.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;max-width:1300px;width:96%;max-height:92vh;overflow:auto}
 .hr{height:1px;background:var(--line);margin:10px 0}
-.split{display:grid;grid-template-columns:1fr;gap:10px}
-@media(min-width:920px){.split{grid-template-columns:1fr 1fr}}
-</style></head><body>
+.progress{height:16px;background:#0b1220;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.progress>div{height:100%;background:linear-gradient(90deg,#37d67a,#4fa3ff)}
+</style>
+</head>
+<body>
 
+<!-- HEADER -->
 <div class="card">
   <h1>Tuncay Holding</h1>
-  <div class="small" id="info">–</div>
-  <div class="row" style="margin-top:8px">
-    <button class="btn" id="prevY">◀ Jahr</button>
-    <div class="small">Jahr: <b id="yearLbl"></b></div>
-    <button class="btn" id="nextY">Jahr ▶</button>
-    <div class="right row">
-      <button class="btn" id="shareBtn">Teilen (Link)</button>
-      <button class="btn" id="exportBtn">Export</button>
-      <button class="btn" id="importBtn">Import</button>
-      <button class="btn danger" id="resetBtn">Reset</button>
-    </div>
-  </div>
-</div>
-
-<div class="card">
-  <div class="row"><h2 style="margin:0">Objekt anlegen / bearbeiten</h2><div class="right small" id="editTag"></div></div>
-  <div class="grid" style="margin-top:10px">
-    <div class="f sm6"><label>Objektname</label><input id="name"></div>
-    <div class="f sm3"><label>Einheiten</label><input id="units" type="number" min="1" step="1"></div>
-    <div class="f sm3"><label>Darlehen Start (YYYY-MM)</label><input id="start" placeholder="2021-04"></div>
-
-    <div class="f sm4"><label>Startschuld (€)</label><input id="principal" type="number" step="0.01"></div>
-    <div class="f sm4"><label>Zins p.a. (%)</label><input id="interest" type="number" step="0.0001"></div>
-    <div class="f sm4"><label>Rate/Monat (€)</label><input id="payment" type="number" step="0.01"></div>
-
-    <div class="f sm6"><label>Nebenkosten (ihr zahlt)/Monat (€)</label><input id="util" type="number" step="0.01"></div>
-    <div class="f sm6"><label>Sondertilgung im gewählten Jahr (€) (im Dezember)</label><input id="extra" type="number" step="0.01"></div>
-
-    <div class="f sm6">
-      <label>Warmmieten je Einheit (monatlich)</label>
-      <div id="rentFields"></div>
-      <div class="row" style="margin-top:8px"><button class="btn" id="buildRents">Felder erstellen</button><div class="small">Ein Feld pro Einheit</div></div>
-    </div>
-
-    <div class="f sm6">
-      <label>&nbsp;</label>
-      <div class="row">
-        <button class="btn primary" id="saveBtn">Objekt speichern ✅</button>
-        <button class="btn" id="cancelBtn" style="display:none">Abbrechen</button>
-        <div class="small" id="msg"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="card">
-  <h2>Gesamtbilanz (Jahr)</h2>
-  <div class="kpis">
-    <div class="kpi" data-k="balance"><div class="t">Gesamt-Restschuld (Ende Jahr)</div><div class="v" id="k_balance">–</div></div>
-    <div class="kpi" data-k="cashflow"><div class="t">Gesamt Cashflow (Jahr)</div><div class="v" id="k_cfY">–</div></div>
-    <div class="kpi" data-k="cashflow"><div class="t">Cashflow (Monat Ø)</div><div class="v" id="k_cfM">–</div></div>
-    <div class="kpi"><div class="t">Eff. Tilgung (Jahr)</div><div class="v" id="k_eff">–</div></div>
-  </div>
-  <div class="kpis" style="margin-top:10px">
-    <div class="kpi"><div class="t">Zinsen (Jahr)</div><div class="v" id="k_int">–</div></div>
-    <div class="kpi"><div class="t">Tilgung (Jahr)</div><div class="v" id="k_pri">–</div></div>
-    <div class="kpi"><div class="t">Sondertilgung (Jahr)</div><div class="v" id="k_xtr">–</div></div>
-    <div class="kpi"><div class="t">Warmmiete (Monat)</div><div class="v" id="k_warm">–</div></div>
-  </div>
-</div>
-
-<div class="card">
+  <div class="small" id="info"></div>
   <div class="row">
-    <h2 style="margin:0">Forecast</h2>
-    <div class="right small">Mietsteigerung theoretisch</div>
-  </div>
-  <div class="grid" style="margin-top:8px">
-    <div class="f sm4"><label>Mietsteigerung (% p.a.)</label><input id="growth" type="number" step="0.01"></div>
-    <div class="f sm4"><label>&nbsp;</label><button class="btn" id="saveGrowth">Speichern</button></div>
-    <div class="f sm4"><label>&nbsp;</label><div class="small" id="growthMsg"></div></div>
+    <button onclick="year--,render()">◀ Jahr</button>
+    <div>Jahr: <b id="yearLbl"></b></div>
+    <button onclick="year++,render()">Jahr ▶</button>
+    <div class="right">
+      <button class="danger" onclick="resetAll()">Reset</button>
+    </div>
   </div>
 </div>
 
+<!-- FORM -->
 <div class="card">
-  <h2>Schuldenabbau (Gesamt) – Jahr für Jahr</h2>
-  <canvas id="debtChart"></canvas>
+  <h2>Objekt anlegen / bearbeiten</h2>
+  <div class="grid">
+    <div class="f sm6"><label>Name</label><input id="name"></div>
+    <div class="f sm3"><label>Einheiten</label><input id="units" type="number"></div>
+    <div class="f sm3"><label>Darlehen Start (YYYY-MM)</label><input id="start"></div>
+
+    <div class="f sm4"><label>Startschuld €</label><input id="principal" type="number"></div>
+    <div class="f sm4"><label>Zins % p.a.</label><input id="interest" type="number"></div>
+    <div class="f sm4"><label>Rate / Monat €</label><input id="payment" type="number"></div>
+
+    <div class="f sm6"><label>Nebenkosten / Monat €</label><input id="util" type="number"></div>
+    <div class="f sm6"><label>Sondertilgung (Jahr) €</label><input id="extra" type="number"></div>
+
+    <div class="f">
+      <label>Warmmieten je Einheit</label>
+      <div id="rents"></div>
+      <button onclick="buildRents()">Felder erstellen</button>
+    </div>
+
+    <div class="f">
+      <button class="primary" onclick="saveObj()">Speichern</button>
+      <div class="small" id="msg"></div>
+    </div>
+  </div>
 </div>
 
-<div class="card"><h2>Objekte</h2><div id="list"></div></div>
+<!-- KPI -->
+<div class="card">
+  <h2>Gesamtbilanz</h2>
+  <div class="kpis">
+    <div class="kpi" onclick="openDebt()"><div class="t">Gesamtschuld</div><div class="v" id="kDebt"></div></div>
+    <div class="kpi" onclick="openCF()"><div class="t">Cashflow (Jahr)</div><div class="v" id="kCF"></div></div>
+    <div class="kpi"><div class="t">Tilgung</div><div class="v" id="kTilg"></div></div>
+    <div class="kpi"><div class="t">Zinsen</div><div class="v" id="kZins"></div></div>
+  </div>
+</div>
 
+<!-- TARGET -->
+<div class="card">
+  <h2>Ziel Cashflow</h2>
+  <div class="grid">
+    <div class="f sm4"><label>Ziel € / Monat</label><input id="targetCF"></div>
+    <div class="f sm4"><label>Mietsteigerung % p.a.</label><input id="growth"></div>
+    <div class="f sm4"><label>&nbsp;</label><button onclick="saveSettings()">Speichern</button></div>
+  </div>
+  <div class="small" id="targetInfo"></div>
+  <div class="progress"><div id="targetBar"></div></div>
+</div>
+
+<!-- CHART -->
+<div class="card">
+  <h2>Schuldenabbau – Gesamt</h2>
+  <canvas id="chart"></canvas>
+</div>
+
+<!-- LIST -->
+<div class="card">
+  <h2>Objekte</h2>
+  <div id="list"></div>
+</div>
+
+<!-- MODAL -->
 <div class="modalBg" id="mbg">
   <div class="modal">
-    <div class="row"><b id="mtitle"></b><div class="right"><button class="btn" id="mclose">Schließen</button></div></div>
-    <div class="small" id="msub"></div>
-    <div class="hr"></div>
+    <button onclick="closeModal()">Schließen</button>
     <div id="mbody"></div>
   </div>
 </div>
 
 <script>
-(() => {
-  const KEY_OBJ="tuncay_obj_v5", KEY_SET="tuncay_set_v1";
-  const $=id=>document.getElementById(id);
-  const eur=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(isFinite(n)?n:0);
-  const r2=n=>Math.round((n+Number.EPSILON)*100)/100;
-  const cls=v=>v>=0?"pos":"neg";
-  const months=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+/* === STATE === */
+const KEY_DATA="tuncay_objects_full";
+const KEY_SET="tuncay_settings_full";
+let year=new Date().getFullYear();
+let objects=JSON.parse(localStorage.getItem(KEY_DATA)||"[]");
+let settings=JSON.parse(localStorage.getItem(KEY_SET)||'{"target":20000,"growth":2}');
+const €=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(n||0);
 
-  const safeParse=k=>{try{const x=localStorage.getItem(k);return x?JSON.parse(x):null}catch{return null}};
-  const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-  const parseYM=s=>{const m=/^(\d{4})-(\d{2})$/.exec((s||"").trim());if(!m) return null; const y=+m[1],mo=+m[2]; if(mo<1||mo>12) return null; return {y,m:mo}};
-  const mIdx=(y,m)=>y*12+(m-1);
-  const fromIdx=i=>({y:Math.floor(i/12), m:(i%12)+1});
+/* === HELPERS === */
+function persist(){localStorage.setItem(KEY_DATA,JSON.stringify(objects));}
+function persistSet(){localStorage.setItem(KEY_SET,JSON.stringify(settings));}
+function byId(id){return document.getElementById(id);}
 
-  let settings = safeParse(KEY_SET)||{growth:2.0};
-  let props = (safeParse(KEY_OBJ)||[]).map(norm);
-  let year = new Date().getFullYear();
-  let editId = null;
+/* === FORM === */
+function buildRents(){
+  const u=+byId("units").value||0;
+  const d=byId("rents");d.innerHTML="";
+  for(let i=0;i<u;i++) d.innerHTML+=`<input data-r="${i}" type="number" placeholder="Einheit ${i+1} €">`;
+}
+function saveObj(){
+  const rents=[...document.querySelectorAll("[data-r]")].map(i=>+i.value||0);
+  objects.push({
+    name:byId("name").value,
+    units:+byId("units").value,
+    start:byId("start").value,
+    principal:+byId("principal").value,
+    interest:+byId("interest").value,
+    payment:+byId("payment").value,
+    util:+byId("util").value,
+    extra:+byId("extra").value,
+    rents
+  });
+  persist(); byId("msg").textContent="Gespeichert ✔"; render();
+}
 
-  function norm(p){
-    const id = p.id || crypto.randomUUID?.() || (Date.now()+Math.random()).toString(16);
-    const units = Math.max(1, Math.floor(+p.units||1));
-    const unitRents = Array.isArray(p.unitRents)?p.unitRents.slice(0,units):[];
-    while(unitRents.length<units) unitRents.push(0);
-    const extras = (p.loan?.extras && typeof p.loan.extras==="object") ? p.loan.extras : {};
-    return {
-      id, name:(p.name||"Unbenannt").trim()||"Unbenannt", units,
-      unitRents, utilitiesMonthly:+p.utilitiesMonthly||0,
-      loan:{
-        startYm:(p.loan?.startYm||"").trim(),
-        principal:+p.loan?.principal||0,
-        interestPa:+p.loan?.interestPa||0,
-        paymentMonthly:+p.loan?.paymentMonthly||0,
-        extras
-      }
-    };
-  }
-  const getExtra=(p,y)=>+(p.loan.extras?.[String(y)]||0);
-  const setExtra=(p,y,a)=>{p.loan.extras=p.loan.extras||{}; const v=+a||0; if(v===0) delete p.loan.extras[String(y)]; else p.loan.extras[String(y)]=r2(v);};
-
-  const warmBase=p=>p.unitRents.reduce((s,x)=>s+(+x||0),0);
-  const growthFactor=(y,baseY)=>Math.pow(1+(settings.growth||0)/100, Math.max(0,y-baseY));
-
-  function balAtStart(p,y,mo){
-    const s=parseYM(p.loan.startYm); if(!s) return 0;
-    const iM=(p.loan.interestPa/100)/12, pay=+p.loan.paymentMonthly||0;
-    let bal=+p.loan.principal||0;
-    const start=mIdx(s.y,s.m), target=mIdx(y,mo);
-    for(let idx=start; idx<target; idx++){
-      if(bal<=0||pay<=0) {bal=Math.max(0,bal); break;}
-      const interest=bal*iM;
-      let rate=pay, need=bal+interest; if(rate>need) rate=need;
-      const prin=Math.max(0, rate-interest);
-      bal-=prin;
-      const ym=fromIdx(idx);
-      if(ym.m===12){
-        const ex=getExtra(p, ym.y);
-        const exApp=Math.max(0, Math.min(ex, bal));
-        bal-=exApp;
-      }
-    }
-    return r2(bal);
-  }
-
-  function monthly(p,y,baseY){
-    const s=parseYM(p.loan.startYm); if(!s) return null;
-    const iM=(p.loan.interestPa/100)/12, pay=+p.loan.paymentMonthly||0;
-    const warm=warmBase(p), util=+p.utilitiesMonthly||0;
-    const warmF=warm*growthFactor(y,baseY);
-    let bal=balAtStart(p,y,1);
-    const rows=[];
+/* === CALC === */
+function calcObject(o,y){
+  let bal=o.principal,tilg=0,zins=0;
+  const iM=o.interest/100/12;
+  const startY=parseInt(o.start);
+  for(let yy=startY;yy<=y;yy++){
     for(let m=1;m<=12;m++){
-      let interest=0, prin=0;
-      if(bal>0 && pay>0){
-        interest=bal*iM;
-        let rate=pay, need=bal+interest; if(rate>need) rate=need;
-        prin=Math.max(0, rate-interest);
-        bal-=prin;
-      }
-      let ex=0;
-      if(m===12){
-        const ex0=getExtra(p,y);
-        ex=Math.max(0, Math.min(ex0, bal));
-        bal-=ex;
-      }
-      const cf=warm-util-pay;
-      const cfF=warmF-util-pay;
-      rows.push({
-        month:m, interest:r2(interest), principal:r2(prin), extra:r2(ex),
-        eff:r2(prin+ex), balanceEnd:r2(bal),
-        warm:r2(warm), warmF:r2(warmF), util:r2(util), pay:r2(pay),
-        cf:r2(cf), cfF:r2(cfF),
-        cfX:r2(m===12?cf-ex:cf), cfXF:r2(m===12?cfF-ex:cfF)
-      });
-    }
-    return rows;
-  }
-
-  function yearAgg(p,y,baseY){
-    const rows=monthly(p,y,baseY); if(!rows) return null;
-    const last=rows[11];
-    const sum=(k)=>r2(rows.reduce((s,r)=>s+(+r[k]||0),0));
-    return {
-      balanceEnd:last.balanceEnd,
-      interest:sum("interest"),
-      principal:sum("principal"),
-      extra:sum("extra"),
-      eff: r2(sum("principal")+sum("extra")),
-      cfYear: sum("cfX"),
-      cfMonth: r2(rows.reduce((s,r)=>s+r.cf,0)/12),
-      warm: rows[0].warm,
-      warmF: rows[0].warmF,
-      cfYearF: sum("cfXF"),
-      cfMonthF: r2(rows.reduce((s,r)=>s+r.cfF,0)/12)
-    };
-  }
-
-  function buildRentFields(n, vals){
-    const wrap=$("rentFields"); wrap.innerHTML="";
-    for(let i=0;i<n;i++){
-      const d=document.createElement("div");
-      d.style.marginBottom="6px";
-      d.innerHTML=`<label class="small">Einheit ${i+1}</label><input type="number" step="0.01" data-r="${i}" value="${vals?.[i]??""}">`;
-      wrap.appendChild(d);
+      const z=bal*iM;
+      const t=Math.max(0,o.payment-z);
+      bal-=t; tilg+=t; zins+=z;
+      if(m===12 && yy===y) bal-=o.extra||0;
     }
   }
-  function readRentFields(){
-    return [...$("rentFields").querySelectorAll("input[data-r]")].map(i=>+i.value||0);
-  }
+  const warm=o.rents.reduce((a,b)=>a+b,0);
+  const cf=(warm-o.util-o.payment)*12-(o.extra||0);
+  return{bal,tilg,zins,cf,warm};
+}
 
-  $("buildRents").onclick=()=>buildRentFields(+$("units").value||0, readRentFields());
+/* === RENDER === */
+function render(){
+  byId("yearLbl").textContent=year;
+  byId("info").textContent=`Gespeichert: ${objects.length} Objekt(e)`;
 
-  function openModal(t,sub,html){$("mtitle").textContent=t;$("msub").textContent=sub||"";$("mbody").innerHTML=html;$("mbg").style.display="flex";}
-  function closeModal(){$("mbg").style.display="none";$("mbody").innerHTML="";}
-  $("mclose").onclick=closeModal; $("mbg").onclick=e=>{if(e.target===$("mbg"))closeModal();};
-
-  function monthlyTable(rows,title){
-    return `<div class="small"><b>${title}</b> (Jan–Dez)</div>
-    <table><thead><tr><th>Monat</th><th>Zins</th><th>Tilgung</th><th>Sonder</th><th>Eff.Tilg</th><th>Rest Ende</th><th>CF</th><th>CF inkl.Sonder</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr>
-      <td>${months[r.month-1]}</td><td>${eur(r.interest)}</td><td>${eur(r.principal)}</td><td>${eur(r.extra)}</td>
-      <td><b>${eur(r.eff)}</b></td><td>${eur(r.balanceEnd)}</td>
-      <td class="${cls(r.cf)}">${eur(r.cf)}</td><td class="${cls(r.cfX)}"><b>${eur(r.cfX)}</b></td>
-    </tr>`).join("")}
-    </tbody></table>`;
-  }
-
-  function cashTable(rows,title,forecast){
-    const kWarm=forecast?"warmF":"warm";
-    const kCf=forecast?"cfF":"cf";
-    const kCfX=forecast?"cfXF":"cfX";
-    return `<div class="small"><b>${title}${forecast?" (Forecast)":""}</b></div>
-    <table><thead><tr><th>Monat</th><th>Warmmiete</th><th>Nebenkosten</th><th>Rate</th><th>CF</th><th>CF inkl.Sonder</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr>
-      <td>${months[r.month-1]}</td><td>${eur(r[kWarm])}</td><td>${eur(r.util)}</td><td>${eur(r.pay)}</td>
-      <td class="${cls(r[kCf])}">${eur(r[kCf])}</td><td class="${cls(r[kCfX])}"><b>${eur(r[kCfX])}</b></td>
-    </tr>`).join("")}
-    </tbody></table>`;
-  }
-
-  function sumMonthly(allRows){
-    const out=[];
-    for(let m=1;m<=12;m++){
-      const row={month:m,interest:0,principal:0,extra:0,eff:0,balanceEnd:0,util:0,pay:0,warm:0,warmF:0,cf:0,cfF:0,cfX:0,cfXF:0};
-      allRows.forEach(rows=>{
-        const r=rows[m-1];
-        Object.keys(row).forEach(k=>{ if(k==="month")return; row[k]+= +r[k]||0; });
-      });
-      Object.keys(row).forEach(k=>{ if(k!=="month") row[k]=r2(row[k]); });
-      out.push(row);
-    }
-    return out;
-  }
-
-  function renderDebtChart(){
-    const c=$("debtChart"), ctx=c.getContext("2d");
-    const w=c.width=c.clientWidth, h=c.height=210;
-    ctx.clearRect(0,0,w,h);
-    if(!props.length){ctx.fillStyle="#9fb0d0";ctx.fillText("Keine Objekte.",12,24);return;}
-    let startY=year; props.forEach(p=>{const s=parseYM(p.loan.startYm); if(s) startY=Math.min(startY,s.y);});
-    const baseY=year; // only for signatures
-    const data=[];
-    for(let y=startY,lim=0;lim<70;lim++,y++){
-      let total=0; props.forEach(p=>{const a=yearAgg(p,y,baseY); if(a) total+=a.balanceEnd;});
-      total=r2(total); data.push({y,total}); if(total<=0) break;
-    }
-    const pad=34, max=Math.max(...data.map(d=>d.total),1);
-    const X=i=>pad + i*((w-2*pad)/Math.max(1,data.length-1));
-    const Y=v=>h-pad - (v/max)*(h-2*pad);
-
-    ctx.strokeStyle="#24304a";ctx.beginPath();ctx.moveTo(pad,pad);ctx.lineTo(pad,h-pad);ctx.lineTo(w-pad,h-pad);ctx.stroke();
-    ctx.strokeStyle="#4fa3ff";ctx.lineWidth=2;ctx.beginPath();
-    data.forEach((d,i)=>{const x=X(i), y=Y(d.total); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);});
-    ctx.stroke();
-    ctx.fillStyle="#37d67a";
-    data.forEach((d,i)=>{ctx.beginPath();ctx.arc(X(i),Y(d.total),3,0,Math.PI*2);ctx.fill();});
-    ctx.fillStyle="#9fb0d0";ctx.font="12px system-ui";
-    ctx.fillText(String(data[0].y), X(0)-10, h-10);
-    ctx.fillText(String(data[data.length-1].y), X(data.length-1)-14, h-10);
-  }
-
-  function render(){
-    $("yearLbl").textContent=year;
-    $("growth").value=settings.growth ?? 2.0;
-    $("info").textContent=`Gespeichert: ${props.length} Objekt(e) · Mietsteigerung: ${settings.growth}% p.a.`;
-
-    const baseY=year;
-    let totBal=0, totInt=0, totPri=0, totEx=0, totEff=0, totCfY=0, totWarm=0;
-    props.forEach(p=>{
-      const a=yearAgg(p,year,baseY); if(!a) return;
-      totBal+=a.balanceEnd; totInt+=a.interest; totPri+=a.principal; totEx+=a.extra; totEff+=a.eff;
-      totCfY+=a.cfYear; totWarm+=a.warm;
-    });
-    totBal=r2(totBal); totCfY=r2(totCfY);
-
-    $("k_balance").textContent=eur(totBal);
-    $("k_cfY").textContent=eur(totCfY); $("k_cfY").className="v "+cls(totCfY);
-    const cfM=r2(totCfY/12); $("k_cfM").textContent=eur(cfM); $("k_cfM").className="v "+cls(cfM);
-    $("k_eff").textContent=eur(r2(totEff));
-    $("k_int").textContent=eur(r2(totInt));
-    $("k_pri").textContent=eur(r2(totPri));
-    $("k_xtr").textContent=eur(r2(totEx));
-    $("k_warm").textContent=eur(r2(totWarm));
-
-    // list
-    const wrap=$("list"); wrap.innerHTML="";
-    props.forEach(p=>{
-      const a=yearAgg(p,year,baseY);
-      const d=document.createElement("details");
-      d.innerHTML = `<summary><div class="row"><div><b>${p.name}</b><div class="small">${p.units} Einheiten · Start ${p.loan.startYm} · Rate ${eur(p.loan.paymentMonthly)}/Monat</div></div>
-      <div class="right small">CF Ø: <b class="${cls(a?.cfMonth||0)}">${eur(a?.cfMonth||0)}</b></div></div></summary>
-      <div class="inner">
-        <div class="small">Restschuld Ende Jahr: <b>${eur(a?.balanceEnd||0)}</b> · Sondertilgung: <b>${eur(getExtra(p,year))}</b></div>
-        <div class="row" style="margin-top:8px">
-          <button class="btn" data-edit="${p.id}">Bearbeiten</button>
-          <button class="btn danger" data-del="${p.id}">Löschen</button>
-        </div>
-      </div>`;
-      wrap.appendChild(d);
-    });
-
-    [...document.querySelectorAll("[data-del]")].forEach(b=>b.onclick=()=>{
-      const id=b.getAttribute("data-del");
-      if(!confirm("Objekt löschen?")) return;
-      props=props.filter(x=>x.id!==id); save(KEY_OBJ,props); if(editId===id) cancelEdit();
-      render();
-    });
-
-    [...document.querySelectorAll("[data-edit]")].forEach(b=>b.onclick=()=>{
-      const id=b.getAttribute("data-edit");
-      const p=props.find(x=>x.id===id); if(!p) return;
-      editId=id; $("cancelBtn").style.display="inline-block"; $("editTag").textContent="Bearbeiten aktiv";
-      $("name").value=p.name; $("units").value=p.units; $("start").value=p.loan.startYm;
-      $("principal").value=p.loan.principal; $("interest").value=p.loan.interestPa; $("payment").value=p.loan.paymentMonthly;
-      $("util").value=p.utilitiesMonthly; $("extra").value=getExtra(p,year)||"";
-      buildRentFields(p.units,p.unitRents);
-      $("msg").textContent="Geladen. Ändern → Speichern.";
-      window.scrollTo({top:0,behavior:"smooth"});
-    });
-
-    renderDebtChart();
-  }
-
-  function cancelEdit(){
-    editId=null; $("cancelBtn").style.display="none"; $("editTag").textContent="";
-    ["name","units","start","principal","interest","payment","util","extra"].forEach(id=>$(id).value="");
-    $("rentFields").innerHTML=""; $("msg").textContent="";
-  }
-  $("cancelBtn").onclick=()=>{cancelEdit(); render();};
-
-  $("saveBtn").onclick=()=>{
-    const name=($("name").value||"").trim();
-    const units=Math.max(1,Math.floor(+$("units").value||0));
-    const start=($("start").value||"").trim();
-    const principal=+$("principal").value, interest=+$("interest").value, payment=+$("payment").value;
-    const util=+$("util").value||0, extra=+$("extra").value||0;
-    const rents=readRentFields();
-
-    const errs=[];
-    if(!name) errs.push("Name fehlt");
-    if(!parseYM(start)) errs.push("Start YYYY-MM");
-    if(!isFinite(principal)||principal<=0) errs.push("Startschuld");
-    if(!isFinite(payment)||payment<=0) errs.push("Rate");
-    if(rents.length!==units) errs.push("Warmmiet-Felder erstellen");
-    if(errs.length){$("msg").textContent="❌ "+errs.join(" · "); return;}
-
-    let p = norm({
-      id: editId || undefined,
-      name, units, unitRents:rents,
-      utilitiesMonthly: util,
-      loan:{ startYm:start, principal, interestPa:interest, paymentMonthly:payment, extras:{} }
-    });
-    if(editId){
-      const old=props.find(x=>x.id===editId);
-      if(old?.loan?.extras) p.loan.extras={...old.loan.extras};
-      const idx=props.findIndex(x=>x.id===editId); props[idx]=p;
-    } else props.push(p);
-
-    setExtra(p, year, extra);
-    save(KEY_OBJ, props);
-    cancelEdit();
-    render();
-  };
-
-  $("prevY").onclick=()=>{year--; render();};
-  $("nextY").onclick=()=>{year++; render();};
-
-  $("saveGrowth").onclick=()=>{
-    const v=+$("growth").value;
-    if(!isFinite(v)||v<0||v>20){$("growthMsg").textContent="❌ 0–20%"; return;}
-    settings.growth=r2(v); save(KEY_SET,settings); $("growthMsg").textContent="✅ gespeichert"; render();
-  };
-
-  $("exportBtn").onclick=()=>prompt("Kopieren:", JSON.stringify(props,null,2));
-  $("importBtn").onclick=()=>{
-    const raw=prompt("JSON einfügen:"); if(!raw) return;
-    try{const data=JSON.parse(raw); if(!Array.isArray(data)) throw 0;
-      props=data.map(norm); save(KEY_OBJ,props); cancelEdit(); render(); alert("✅ Import ok");
-    }catch{alert("❌ Import fehlerhaft");}
-  };
-  $("resetBtn").onclick=()=>{ if(confirm("Alles löschen?")){props=[]; save(KEY_OBJ,props); cancelEdit(); render();} };
-
-  // Share link (objects)
-  const enc = (obj)=>encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(obj)))));
-  const dec = (s)=>JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(s)))));
-  function shareUrl(){ return location.origin+location.pathname+"#data="+enc(props); }
-  $("shareBtn").onclick=async()=>{
-    const url=shareUrl();
-    try{
-      if(navigator.share){ await navigator.share({title:"Tuncay Holding",text:"Objektdaten",url}); return; }
-      await navigator.clipboard.writeText(url); alert("✅ Link kopiert");
-    }catch{ prompt("Link kopieren:", url); }
-  };
-  (function importFromHash(){
-    try{
-      if(!location.hash.startsWith("#data=")) return;
-      const data=dec(location.hash.slice(6));
-      if(!Array.isArray(data)) return;
-      if(confirm("Link enthält Objekte. Importieren? (überschreibt)")){
-        props=data.map(norm); save(KEY_OBJ,props);
-      }
-      history.replaceState(null,"",location.pathname+location.search);
-    }catch{}
-  })();
-
-  // Click-details
-  document.querySelectorAll(".kpi[data-k]").forEach(k=>{
-    k.onclick=()=>{
-      const type=k.getAttribute("data-k");
-      const baseY=year;
-      const schedules=props.map(p=>({p,rows:monthly(p,year,baseY)})).filter(x=>x.rows);
-      const total=sumMonthly(schedules.map(s=>s.rows));
-
-      if(type==="balance"){
-        let html = monthlyTable(total,"GESAMT");
-        schedules.forEach(s=>{ html += `<div class="hr"></div>`+monthlyTable(s.rows,s.p.name); });
-        openModal("Gesamt-Restschuld – Monatsplan", "Tilgung/Zins/Rest pro Monat, Sondertilgung im Dezember", html);
-      }
-      if(type==="cashflow"){
-        let html = `<div class="split">
-          <div>${cashTable(total,"GESAMT IST",false)}</div>
-          <div>${cashTable(total,`GESAMT Forecast (${settings.growth}% p.a.)`,true)}</div>
-        </div>`;
-        schedules.forEach(s=>{
-          html += `<div class="hr"></div><div class="split">
-            <div>${cashTable(s.rows,`${s.p.name} IST`,false)}</div>
-            <div>${cashTable(s.rows,`${s.p.name} Forecast`,true)}</div>
-          </div>`;
-        });
-        openModal("Cashflow – Monatsansicht", "IST vs Forecast (Mietsteigerung theoretisch)", html);
-      }
-    };
+  let debt=0,cf=0,tilg=0,zins=0;
+  objects.forEach(o=>{
+    const r=calcObject(o,year);
+    debt+=r.bal; cf+=r.cf; tilg+=r.tilg; zins+=r.zins;
   });
 
-  renderProfiles:0; // (no-op placeholder)
-  $("growth").value=settings.growth ?? 2.0;
-  renderProfilesUI?.(); // ignore if undefined
-  render();
-})();
+  byId("kDebt").textContent=€(debt);
+  byId("kCF").textContent=€(cf);
+  byId("kCF").className="v "+(cf>=0?"pos":"neg");
+  byId("kTilg").textContent=€(tilg);
+  byId("kZins").textContent=€(zins);
+
+  const curMonthCF=cf/12;
+  const pct=Math.min(100,Math.max(0,curMonthCF/settings.target*100));
+  byId("targetInfo").textContent=`${pct.toFixed(1)} % von ${€(settings.target)} erreicht`;
+  byId("targetBar").style.width=pct+"%";
+
+  drawChart();
+  renderList();
+}
+
+/* === LIST === */
+function renderList(){
+  const l=byId("list");l.innerHTML="";
+  objects.forEach((o,i)=>{
+    l.innerHTML+=`
+    <details>
+      <summary>${o.name}</summary>
+      <div class="inner">
+        Startschuld ${€(o.principal)} · Rate ${€(o.payment)}
+        <div class="row">
+          <button onclick="objects.splice(${i},1);persist();render()">Löschen</button>
+        </div>
+      </div>
+    </details>`;
+  });
+}
+
+/* === CHART === */
+function drawChart(){
+  const c=byId("chart"),ctx=c.getContext("2d");
+  c.width=c.offsetWidth;c.height=300;
+  ctx.clearRect(0,0,c.width,c.height);
+  if(!objects.length)return;
+
+  let pts=[];
+  for(let i=0;i<=30;i++){
+    let y=year+i,sum=0;
+    objects.forEach(o=>sum+=calcObject(o,y).bal);
+    pts.push({y,sum});
+  }
+  const max=Math.max(...pts.map(p=>p.sum));
+  const pad=50;
+  ctx.strokeStyle="#24304a";
+  ctx.beginPath();ctx.moveTo(pad,10);ctx.lineTo(pad,260);ctx.lineTo(c.width-10,260);ctx.stroke();
+
+  ctx.strokeStyle="#4fa3ff";ctx.beginPath();
+  pts.forEach((p,i)=>{
+    const x=pad+i*(c.width-pad-20)/(pts.length-1);
+    const y=260-p.sum/max*230;
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    if(i%5===0){
+      ctx.fillStyle="#9fb0d0";
+      ctx.fillText(p.y,x-12,280);
+      ctx.fillText(Math.round(p.sum/1000)+"k€",x-20,y-6);
+    }
+  });
+  ctx.stroke();
+}
+
+/* === MODALS === */
+function openDebt(){
+  let html="<h3>Monatliche Tilgung (Gesamt)</h3><table><tr><th>Objekt</th><th>Restschuld</th></tr>";
+  objects.forEach(o=>{
+    const r=calcObject(o,year);
+    html+=`<tr><td>${o.name}</td><td>${€(r.bal)}</td></tr>`;
+  });
+  html+="</table>";
+  openModal(html);
+}
+function openCF(){
+  let html="<h3>Cashflow (Jahr)</h3><table><tr><th>Objekt</th><th>CF</th></tr>";
+  objects.forEach(o=>{
+    const r=calcObject(o,year);
+    html+=`<tr><td>${o.name}</td><td>${€(r.cf)}</td></tr>`;
+  });
+  html+="</table>";
+  openModal(html);
+}
+function openModal(html){
+  byId("mbody").innerHTML=html;
+  byId("mbg").style.display="flex";
+}
+function closeModal(){byId("mbg").style.display="none";}
+
+/* === SETTINGS === */
+function saveSettings(){
+  settings.target=+byId("targetCF").value||settings.target;
+  settings.growth=+byId("growth").value||settings.growth;
+  persistSet(); render();
+}
+
+/* === RESET === */
+function resetAll(){
+  if(confirm("Alles löschen?")){
+    objects=[];persist();render();
+  }
+}
+
+byId("targetCF").value=settings.target;
+byId("growth").value=settings.growth;
+render();
 </script>
-</body></html>
+
+</body>
+</html>
